@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from tkinter.font import BOLD
 import util.generic as utl
-from forms.form_master import MasterPanel
+from forms.master.form_master import MasterPanel
 
 class App:
     def check_session(self): #verificar el usuario y la contraseña
@@ -23,7 +23,7 @@ class App:
         self.ventana.resizable(width = 0, height = 0)
         utl.centrar_ventana(self.ventana, 800, 500)
 
-        logo = utl.leer_imagen("./otrologin/imagenes/logo.jpg", (200,200))
+        logo = utl.leer_imagen("./imagenes/logo.jpg", (200,200))
 
         #frame_logo 
         frame_logo = tk.Frame(self.ventana, bd = 0, width = 300, relief = tk.SOLID, padx = 10, pady = 10, bg = "#3a7ff6")
