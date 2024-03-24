@@ -3,9 +3,9 @@ from persistence.model import Auth_User
 from sqlalchemy.orm import Session
 
 #gestionamos la conectividad a nuestra base de datos
-class AuthUserRespository():
+class AuthUserRepository():
     def __init__(self):
-        self.engine = db.create_engine('sqlite:///./db/login.dbs', echo = False, future = False)
+        self.engine = db.create_engine('sqlite:///./db/login.db', echo = False, future = True)
 
     def getUserByUserName(self, user_name: str):
         user: Auth_User = None
