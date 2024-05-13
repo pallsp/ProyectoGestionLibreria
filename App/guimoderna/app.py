@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import *
 from ttkbootstrap import * 
-from ttkbootstrap.tableview import Tableview
 from ttkbootstrap.dialogs import Messagebox
 from data import Datos
 from crear_documentos import AddDocumentos
@@ -13,6 +12,7 @@ from tkinter import font
 from ttkbootstrap import font
 from crear_estantes import AddEstantes
 import sys
+import hashlib
 
 class App(Window):
     def __init__(self, themename = "superhero"):
@@ -29,13 +29,13 @@ class App(Window):
         self.perfil = ""
         self.estantes = [] # lista con los nombres de los estantes
         #self.banner = utl_img.leer_imagen("/home/pablo/PROYECTO/App/imagenes/banner_recortado.png", (276,70)) # fuente Ruda color #2e4b4b
-        self.set_image_perfil("/home/pablo/Escritorio/ProyectoFinalDAM/LibreriaGestion/login/sidebar_menu/imagenes/Perfil.jpeg")
+        #self.set_image_perfil("/home/pablo/Escritorio/ProyectoFinalDAM/LibreriaGestion/login/sidebar_menu/imagenes/libreriologo.png") # foto predeterminada SE PUEDE CAMBIAR
+        self.set_image_perfil(self.user.foto)
         self.widgets()
         #self.mostrar()
         self.idlibro = -1
 
     def set_image_perfil(self, path):
-        #"/home/pablo/Escritorio/ProyectoFinalDAM/LibreriaGestion/login/sidebar_menu/imagenes/Perfil.jpeg"
         self.perfil = utl_img.leer_imagen(path, (70, 70))
 
     def entry_label(self,frame,x,y,texto):
@@ -190,7 +190,7 @@ class App(Window):
         btndocumentos = Button(self.lblFrameLateral, text="Añadir documentos", bootstyle = WARNING, command=self.ver_documentos)
         btndocumentos.place(x=30,y=10,width=200)
 
-        self.btnestante = Button(self.lblFrameLateral, text="Nuevo estante", bootstyle = WARNING, command=self.nuevo_estante)
+        self.btnestante = Button(self.lblFrameLateral, text="Crear estantes", bootstyle = WARNING, command=lambda: self.show_confirm_passw("estantes"))
         self.btnestante.place(x=30,y=70,width=200)
 
         btnbiblioteca = Button(self.lblFrameLateral, text="Ver biblioteca", bootstyle = WARNING, command=self.ver_biblioteca)
@@ -302,6 +302,35 @@ class App(Window):
 
     def ver_biblioteca(self):
         pass
+    
+    # PARA SOLICITAR CONTRASEÑA
+    def check_pass(self, tipo):
+        estado = False
+        #user = self.database_manager.selectUserById(self.user_id)
+        if self.do_hash(self.passw_entry.get()) == self.user.password: # porque guardo la contraseña hasheada
+            Messagebox.show_info(title="Éxito", message=f"Contraseña correcta. Puedes añadir {tipo}.")
+            estado = True
+        else: 
+            Messagebox.show_error(title="Error", message="Contraseña incorrecta. Inténtalo de nuevo", alert=True)
+        self.popup.destroy()
+        if estado and tipo == "estantes":
+            self.nuevo_estante()
+
+    def show_confirm_passw(self, tipo):
+        self.popup = tk.Toplevel(self.lblFramePrincipal)
+        self.popup.geometry("400x200")
+        self.popup.resizable(False, False)
+        ttk.Label(self.popup, text=f"Introduce la contraseña para poder añadir {tipo}: ").place(x=30,y=20)
+        self.passw_entry = ttk.Entry(self.popup, show="*", width=30)
+        self.passw_entry.place(x=80,y=65)
+        self.passw_entry.focus_set()
+        ttk.Button(self.popup, text="Confirmar", bootstyle = SUCCESS, command=lambda: self.check_pass(tipo)).place(x=300,y=160)
+
+    # HASH
+    def do_hash(self, texto: str):
+        hasher = hashlib.sha3_512()
+        hasher.update(texto.encode('utf-8'))
+        return hasher.hexdigest()
 
 if __name__ == "__main__":
     app = App()

@@ -23,7 +23,7 @@ class Usuario(Base):
     nombre = Column(String(50), nullable=False, unique=True)
     password = Column(String(500), nullable=False)
     correo = Column(String(100), nullable=False)
-    foto = Column(String(200))
+    foto = Column(String(250))
 
     #relación con la tabla cuenta 
     cuenta = relationship("Cuenta", uselist=False, back_populates="usuario")
@@ -41,7 +41,7 @@ class Cuenta(Base):
 
 class Biblioteca(Base):
     __tablename__ = "biblioteca"
-    id = Column(String(20), primary_key=True)
+    id = Column(String(50), primary_key=True)
     propietario_id = Column(Integer, ForeignKey("usuario.id"), primary_key=True)
     fecha_creacion = Column(Date)
 
@@ -54,6 +54,7 @@ class Biblioteca(Base):
 class Estante(Base):
     __tablename__ = "estante"
     id = Column(Integer, primary_key=True, autoincrement=True)
+    nombre = Column(String(100), nullable=False, unique=True)
     propietario_id = Column(Integer, ForeignKey("biblioteca.propietario_id"), primary_key=True)
     tematica = Column(String(50))
     tamano = Column(Integer, nullable=False)
@@ -142,6 +143,7 @@ class Libro(Base):
 class Otro(Base):
     __tablename__ = "otro"
     id = Column(Integer, ForeignKey("documento.id"), primary_key=True)
+    propietario_id = Column(Integer, ForeignKey("usuario.id"), primary_key=True)
     emisor = Column(String(50))
     fecha = Column(Date)
     tipo = Column(String(50), nullable=False)

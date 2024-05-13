@@ -10,7 +10,7 @@ from persistence.repository.database_manager import DatabaseManager
 def create_database():
     try:
         connection = mysql.connector.connect(
-            user = 'root',
+            user = 'Pablo',
             password = '1234', # aqui la contraseña
             host = '127.0.0.1',
             #database = 'db_librerio',
@@ -34,7 +34,7 @@ def create_database():
 def build_db():
     try:
         #engine = db.create_engine(f'mysql://{usuario}:{passw}@localhost/{db_usuario}')
-        engine = db.create_engine('mysql://root:1234@localhost/db_librerio')
+        engine = db.create_engine('mysql://Pablo:1234@localhost/db_librerio')
         mod.Base.metadata.create_all(engine)
         print("Base de datos levantada con éxito.")
     except exc.SQLAlchemyError as error: 
@@ -93,6 +93,9 @@ def insert_data():
     database_manager.insertCategoria(categoria_fantasia)
     database_manager.insertCategoria(categoria_ciencia_ficcion)
     database_manager.insertCategoria(categoria_historica)
+    database_manager.insertCategoria(categoria_manga)
+    database_manager.insertCategoria(categoria_policiaca)
+    database_manager.insertCategoria(categoria_ensayo)
     
 
 create_database() # creamos la base de datos

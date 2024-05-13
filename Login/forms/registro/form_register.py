@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 import smtplib
 from email.message import EmailMessage
 import ssl
+from datetime import datetime
 
 #------------------------- LÓGICA REGISTRO---------------------------------
 class FormRegister(FormRegisterDesigner):
@@ -25,7 +26,7 @@ class FormRegister(FormRegisterDesigner):
             usuario.nombre = self.usuario.get() # obtenemos el usuario
             usuario.password = self.passw.get() # obtenemos la contraseña
             usuario.correo = self.email.get() # obtenemos el correo
-
+            usuario.foto = "/home/pablo/PROYECTO/imagenes/libreriologo.png" # foto por defecto HAY QUE CAMBIAR LA RUTA
             if usuario.nombre == "" or usuario.password == "" or usuario.correo == "": # si falta algún campo
                 messagebox.showerror(message = "Faltan campos, por favor rellena todos los campos.", title = "Mensaje")
             #self.database_manager = DatabaseManager(usuario.nombre, usuario.password, db_usuario)
@@ -33,7 +34,8 @@ class FormRegister(FormRegisterDesigner):
             elif not(self.isUserRegister(usuario)): # si el usuario no estaba registrado anteriormente
                 usuario.password = self.do_hash(self.passw.get()) #cript_dec.encrypted(self.passw.get())
                 self.database_manager.insertUser(usuario) # insertamos usuario en la tabla de usuarios registrados y creamos el usuario en la base de datos
-                messagebox.showinfo(message = f"Usuario registrado correctamente con correo {usuario.correo}.", title = "Mensaje")
+                messagebox.showinfo(message = f"Usuario registrado correctamente con correo {self.email.get()}.", title = "Mensaje")
+                #self.create_user_things(self.usuario.get())
                 self.ventana.destroy()
                 #self.send_correo(usuario) # enviar correo confirmación
 
@@ -77,6 +79,10 @@ class FormRegister(FormRegisterDesigner):
         with smtplib.SMTP_SSL("smtp.gmail.com", 465, context = context) as smtp:
             smtp.login(email_sender, password)
             smtp.sendmail(email_sender, email_receiver, em.as_string())
+
+    def create_user_things(self, nombre_usuario, id_usuario):
+        fecha_actual = datetime.now().date()
+        self.database_manager.createBiblioteca(f"bib-{nombre_usuario}", id_usuario, fecha_actual) # creamos la biblioteca
 
     # POR AHORA NO SE USA
     def create_database(self, usuario: Usuario):

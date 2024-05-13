@@ -23,6 +23,7 @@ class AddLibro(Frame):
         #super().__init__(themename="superhero", size=(1260, 700), title="Interfaz moderna") #proporcion 1.8
         self.database_manager = DatabaseManager()
         self.user_id = id
+        self.doc_id_editar = ""
         self.user: Usuario = self.database_manager.selectUserById(self.user_id)
         self.estantes = lista_estantes
         self.principal = master
@@ -35,7 +36,7 @@ class AddLibro(Frame):
         lbl.place(x=x,y=y)
 
         entry = Entry(frame, bootstyle=(PRIMARY))
-        entry.place(x=x+100,y=y)
+        entry.place(x=x+100, y=y)
         return entry
 
     def comboboxea(self, frame, x, y, texto, opciones):
@@ -56,18 +57,26 @@ class AddLibro(Frame):
         elif len(self.e_titulo.get()) == 0:
             Messagebox.show_error(title="Error", message="El título es un campo obligatorio", alert=True)
             return False 
+        elif not self.e_isbn.get().isdigit():
+            Messagebox.show_error(title="Error", message="El ISBN tiene que ser un conjunto de dígitos", alert=True)
+            return False
         elif not re.match(patron_fecha, self.e_fecha.get()):
             Messagebox.show_error(title="Error", message="La fecha no está en el formato adecuado", alert=True)
             return False
         return True
 
     def mostrar(self):
+        formato = ""
         dato = []
-        datosDocumentos = self.database_manager.selectAllDocumentosLibros() # obtengo los documentos que sean libros
+        datosDocumentos = self.database_manager.selectAllDocumentosLibros(self.user_id) # obtengo los documentos que sean libros y pertenezcan al usuario
         if len(datosDocumentos) != 0:
             for documento in datosDocumentos:
                 datosLibro = self.database_manager.selectLibrosById(documento.id) # obtengo los datos del libro
-                fila = [documento.id, documento.titulo, documento.autor, documento.idioma, documento.formato_id, datosLibro[0].isbn, datosLibro[0].editorial, datosLibro[0].tematica]
+                if documento.formato_id == 1000:
+                    formato = "Físico"
+                else:
+                    formato = "PDF"
+                fila = [documento.id, documento.titulo, documento.autor, documento.idioma, formato, datosLibro[0].isbn, datosLibro[0].editorial, datosLibro[0].tematica]
                 dato.append(fila)
             #dato = [datosDocumentos[0],datosDocumentos[3],datosDocumentos[4],datosDocumentos[6],datosDocumentos[5],datosLibros[0],datosLibros[3],datosLibros[4]]
         self.tableview.build_table_data(self.coldata,dato)
@@ -83,7 +92,7 @@ class AddLibro(Frame):
                 documento.formato = self.database_manager.selectFormatoByTipo("Físico")
             else:
                 documento.formato = self.database_manager.selectFormatoByTipo("PDF")
-            # hay que guardar sí o sí un entero para estante
+            # hay que guardar sí o sí un entero para estante pero cuidado porque no si no hay estantes no puede haber enteros
             if len(self.estantes) == 0 or self.e_estante.get() is None:
                 documento.estante = None
             else:
@@ -113,9 +122,20 @@ class AddLibro(Frame):
             else: # es una actualización
                 valor = Messagebox.show_question(title="Alerta", message="¿Estás seguro de que deseas actualizar el libro?", alert=True)
                 if valor == "Sí":
-                    self.database_manager.updateDocumento(self.e_titulo.get(), self.e_autor.get(), self.e_idioma.get(), self.e_formato, self.e_estante.get())
-                    self.database_manager.updateLibro(self.e_isbn, self.e_fecha, self.e_editorial, self.e_tematica, self.e_genero, self.e_categoria)
+                    estante = ""
+                    formato = ""
+                    if len(self.estantes) == 0 or self.e_estante.get() is None:
+                        estante = None
+                    else:
+                        estante = self.e_estante.get()
+                    if self.e_formato.get() == "físico":
+                        formato = 1000
+                    else:
+                        formato = 1001
+                    self.database_manager.updateDocumento(self.doc_id_editar, self.e_titulo.get(), self.e_autor.get(), self.e_idioma.get(), formato, estante)
+                    self.database_manager.updateLibro(self.doc_id_editar, self.e_isbn.get(), self.e_fecha.get(), self.e_editorial.get(), self.e_tematica.get(), self.e_genero.get(), self.e_categoria.get())
                     self.is_new = True
+                    Messagebox.show_info(title="Éxito", message="Datos actualizados con éxito")
                 self.btneditar.configure(state="disable")
                 self.btneliminar.configure(state="disable")
             self.mostrar()
@@ -137,9 +157,9 @@ class AddLibro(Frame):
         self.is_new = False
         self.limpiar()
         dato = self.tableview.view.item(self.tableview.view.selection())["values"]
-        id = int(dato[0]) # id del libro y documento a editar
-        documento = self.database_manager.selectDocumentsById(id)
-        libro = self.database_manager.selectLibrosById(id)
+        self.doc_id_editar = int(dato[0]) # id del libro y documento a editar
+        documento = self.database_manager.selectDocumentsById(self.doc_id_editar)
+        libro = self.database_manager.selectLibrosById(self.doc_id_editar)
         self.e_titulo.insert(0, documento[0].titulo)
         self.e_autor.insert(0, documento[0].autor)
         self.e_idioma.insert(0, documento[0].idioma)
@@ -151,6 +171,8 @@ class AddLibro(Frame):
         self.e_editorial.insert(0, libro[0].editorial)
         self.e_fecha.insert(0, str(libro[0].fecha_publicacion))
         self.e_tematica.insert(0, libro[0].tematica)
+        self.e_genero.current(0)
+        self.e_categoria.current(0)
 
     def eliminar(self):
         dato = self.tableview.view.item(self.tableview.view.selection())["values"]
@@ -228,14 +250,14 @@ class AddLibro(Frame):
 
         # TABLA LBLFRAME2
         self.coldata = [
-            {"text":"ID","width":200},
-            {"text":"Titulo","stretch":True},
-            {"text":"Autor","width":200},
-            {"text": "Idioma", "width":50},
-            {"text": "Formato", "width":30},
-            {"text": "ISBN", "width":100},
-            {"text":"Editorial","width":200},
-            {"text":"Temática","width":100},
+            {"text":"ID", "width":200},
+            {"text":"Titulo", "stretch":True},
+            {"text":"Autor", "width":200},
+            {"text":"Idioma", "width":50},
+            {"text":"Formato", "width":30},
+            {"text":"ISBN", "width":100},
+            {"text":"Editorial", "width":200},
+            {"text":"Temática", "width":100},
         ]
         self.tableview = Tableview(lblframe2, 
                               paginated=True,

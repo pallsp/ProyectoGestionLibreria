@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import text
 import hashlib
+from datetime import datetime 
 
 #gestionamos la conectividad a nuestra base de datos
 class DatabaseManager():
@@ -31,6 +32,14 @@ class DatabaseManager():
             session.execute(text(f"CREATE USER IF NOT EXISTS '{usuario.nombre}'@'localhost' IDENTIFIED BY '{usuario.password}'"))
             session.execute(text(f"GRANT ALL PRIVILEGES ON db_librerio.* TO '{usuario.nombre}'@'localhost'"))
             session.commit()
+            biblioteca = Biblioteca()
+            biblioteca.id = f"bib-{usuario.nombre}"
+            biblioteca.propietario_id = usuario.id
+            biblioteca.fecha_creacion = datetime.now().date()
+            #session = self.Session()
+            session.add(biblioteca)
+            session.commit()
+            #print("Biblioteca creada con éxito en la base de datos.")
             #print("Usuario creado con éxito en el gestor de mysql.")
             #try:
             #connection = mysql.connector.connect(
@@ -96,7 +105,26 @@ class DatabaseManager():
                 session.close()
         return user
     
-    
+    # ----------TABLA BIBLIOTECA----------
+
+    # INSERT BIBLIOTECA
+    def createBiblioteca(self, id_biblioteca, user_id, fecha):
+        try:
+            biblioteca = Biblioteca()
+            biblioteca.id = id_biblioteca
+            biblioteca.propietario_id = user_id
+            biblioteca.fecha_creacion = fecha
+            session = self.Session()
+            session.add(biblioteca)
+            session.commit()
+            print("Biblioteca creada con éxito en la base de datos.")
+        except SQLAlchemyError as error:
+            session.rollback()
+            print(f"Error al añadir la biblioteca a la base de datos: {error}")
+        finally:
+            if session.is_active:
+                session.close()
+
     # ----------TABLA DOCUMENTO----------
 
     # INSERT DOCUMENTO
@@ -172,11 +200,24 @@ class DatabaseManager():
                 session.close()
         return documentos
     
-    # SELECT * FROM Documents WHERE tipo = Libro
-    def selectAllDocumentosLibros(self):
+    # SELECT * FROM Documents WHERE tipo = Libro and id_propietario = id
+    def selectAllDocumentosLibros(self, user_id):
         try:
             session = self.Session()
-            documentos = session.query(Documento).filter(Documento.tipo == "Libro").all()
+            documentos = session.query(Documento).filter(Documento.tipo == "Libro", Documento.propietario_id == user_id).all()
+        except SQLAlchemyError as error:
+            session.rollback()
+            print(f"Error al obtener los documentos de la base de datos: {error}")
+        finally:
+            if session.is_active:
+                session.close()
+        return documentos
+    
+    # SELECT * FROM Documents WHERE tipo = Orto
+    def selectAllDocumentosOtros(self, user_id):
+        try:
+            session = self.Session()
+            documentos = session.query(Documento).filter(Documento.tipo == "Otro", Documento.propietario_id == user_id).all()
         except SQLAlchemyError as error:
             session.rollback()
             print(f"Error al obtener los documentos de la base de datos: {error}")
@@ -193,8 +234,10 @@ class DatabaseManager():
                 {Documento.titulo:titulo, 
                  Documento.autor:autor, 
                  Documento.idioma:idioma, 
-                 Documento.formato:formato, 
+                 Documento.formato_id:formato, 
                  Documento.estante:estante})
+            session.commit()
+            print("Documento actualizado con éxito en la base de datos.")
         except SQLAlchemyError as error:
             session.rollback()
             print(f"Error al actualizar los datos del documento en la base de datos: {error}")
@@ -306,6 +349,8 @@ class DatabaseManager():
                  Libro.tematica:tematica, 
                  Libro.nombre_genero:genero,
                  Libro.nombre_categoria:categoria})
+            session.commit()
+            print("Libro actualizado con éxito en la base de datos.")
         except SQLAlchemyError as error:
             session.rollback()
             print(f"Error al actualizar los datos del libro en la base de datos: {error}")
@@ -319,6 +364,67 @@ class DatabaseManager():
         with Session(self.engine) as session: 
             users = session.query(Usuario).all()
             return users
+
+    # ----------TABLA OTRO---------- 
+    # SELECT * FROM otro WHERE id = id
+    def selectOtroById(self, id):
+        try:
+            session = self.Session()
+            otros = session.query(Otro).filter(Otro.id_documento == id).all()
+        except SQLAlchemyError as error:
+            session.rollback()
+            print(f"Error al obtener los otros de la base de datos: {error}")
+        finally:
+            if session.is_active:
+                session.close()
+        return otros
+
+    # INSERT OTRO
+    def insertOtro(self, otro: Otro):
+        try:
+            session = self.Session()
+            session.add(otro)
+            session.commit()
+            print("Otro añadido con éxito a la base de datos.")
+        except SQLAlchemyError as error:
+            session.rollback()
+            print(f"Error al añadir el otro a la base de datos: {error}")
+        finally:
+            if session.is_active:
+                session.close()
+
+    # UPDATE OTRO
+    def updateOtro(self, id_documento, emisor, fecha, tipo, subtipo):
+        try:
+            session = self.Session()
+            session.query(Otro).filter(Otro.id == id_documento).update(
+                {Otro.emisor:emisor, 
+                 Otro.fecha_publicacion:fecha, 
+                 Otro.editorial:tipo, 
+                 Otro.tematica:subtipo})
+            session.commit()
+            print("Otro actualizado con éxito en la base de datos.")
+        except SQLAlchemyError as error:
+            session.rollback()
+            print(f"Error al actualizar los datos del otro en la base de datos: {error}")
+        finally:
+            if session.is_active:
+                session.close()
+
+    # DELETE OTRO POR ID
+    def deleteOtroById(self, id):
+        try:
+            session = self.Session()
+            otro = session.query(Otro).filter(Otro.id == id).one()
+            session.delete(otro)
+            session.commit()
+            print("Orto eliminado con éxito a la base de datos.")
+        except SQLAlchemyError as error:
+            session.rollback()
+            print(f"Error al eliminar el otro a la base de datos: {error}")
+        finally:
+            if session.is_active:
+                session.close()
 
     # ----------TABLA ESTANTE----------
 

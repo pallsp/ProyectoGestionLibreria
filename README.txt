@@ -1,5 +1,5 @@
 ALGUNAS INDICACIONES: 
-
+- Hay que descargar mysql y mysqlworkbench (este último recomendable) y crear un usuario llamado Pablo con contraseña 1234 (esas son las credenciales que tengo, se pueden cambiar).
 - Para ejecutar hay que lanzar librerio.py.
 - Existen dos partes, la App, que cuenta con la aplicación como tal, y el Login, que cuenta con el login y registro. Primero se ejecuta siempre el login y luego la app. 
 - Al logarte tendrás que primero registrarte obligatoriamente. Cada vez que se ejecute la aplicación habrá que logarse. 

@@ -9,7 +9,7 @@ def build_launch_base_datos():
 
 def ejecutar_login():
     # Ejecutar login.py como un proceso separado
-    resultado_login = subprocess.run(["python3", "Login/main.py"], capture_output=True)
+    resultado_login = subprocess.run(["python3", "Login/main.py"], capture_output=True) #capture_output=True
     resultado = resultado_login.stdout.strip().decode()
     return resultado
 def ejecutar_app(user_id):

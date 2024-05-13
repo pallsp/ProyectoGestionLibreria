@@ -39,7 +39,7 @@ if re.match(patron_fecha, fecha):
     print("fecha en el formato adecuado")
 else: 
     print("fecha incorrecta")"""
-nombre = "pablo"
+"""nombre = "pablo"
 load_dotenv()
 password = os.getenv("PASSWORD")
 email_sender = "libreriocontacto@gmail.com"
@@ -55,4 +55,10 @@ em.set_content(body)
 context = ssl.create_default_context()
 with smtplib.SMTP_SSL("smtp.gmail.com", 465, context = context) as smtp:
     smtp.login(email_sender, password)
-    smtp.sendmail(email_sender, email_receiver, em.as_string())
+    smtp.sendmail(email_sender, email_receiver, em.as_string())"""
+
+cadena: str = input("Introduce una cadena de dígitos: ")
+if cadena.isdigit():
+    print("son digitos")
+else:
+    print("no son digitos")
