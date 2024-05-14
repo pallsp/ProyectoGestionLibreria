@@ -13,10 +13,6 @@ from ttkbootstrap import *
 from ttkbootstrap.tableview import Tableview
 from ttkbootstrap.dialogs import Messagebox
 
-from ttkbootstrap import * 
-from ttkbootstrap.tableview import Tableview
-from ttkbootstrap.dialogs import Messagebox
-
 class AddLibro(Frame):
     def __init__(self, id, lista_estantes: list, master = None):
         super().__init__(master)
@@ -71,15 +67,15 @@ class AddLibro(Frame):
         datosDocumentos = self.database_manager.selectAllDocumentosLibros(self.user_id) # obtengo los documentos que sean libros y pertenezcan al usuario
         if len(datosDocumentos) != 0:
             for documento in datosDocumentos:
-                datosLibro = self.database_manager.selectLibrosById(documento.id) # obtengo los datos del libro
+                datosLibro = self.database_manager.selectLibroById(documento.id) # obtengo los datos del libro
                 if documento.formato_id == 1000:
                     formato = "Físico"
                 else:
                     formato = "PDF"
-                fila = [documento.id, documento.titulo, documento.autor, documento.idioma, formato, datosLibro[0].isbn, datosLibro[0].editorial, datosLibro[0].tematica]
+                fila = [documento.id, documento.titulo, documento.autor, documento.idioma, formato, datosLibro.isbn, datosLibro.editorial, datosLibro.tematica] # probar sino con datosLibro[0]
                 dato.append(fila)
             #dato = [datosDocumentos[0],datosDocumentos[3],datosDocumentos[4],datosDocumentos[6],datosDocumentos[5],datosLibros[0],datosLibros[3],datosLibros[4]]
-        self.tableview.build_table_data(self.coldata,dato)
+        self.tableview.build_table_data(self.coldata, dato)
 
     def guardar(self):
         if self.validar(): #validar datos de los campos antes de guardar
@@ -158,19 +154,19 @@ class AddLibro(Frame):
         self.limpiar()
         dato = self.tableview.view.item(self.tableview.view.selection())["values"]
         self.doc_id_editar = int(dato[0]) # id del libro y documento a editar
-        documento = self.database_manager.selectDocumentsById(self.doc_id_editar)
-        libro = self.database_manager.selectLibrosById(self.doc_id_editar)
-        self.e_titulo.insert(0, documento[0].titulo)
-        self.e_autor.insert(0, documento[0].autor)
-        self.e_idioma.insert(0, documento[0].idioma)
-        if documento[0].formato_id == 1000:
+        documento = self.database_manager.selectDocumentById(self.doc_id_editar)
+        libro = self.database_manager.selectLibroById(self.doc_id_editar)
+        self.e_titulo.insert(0, documento.titulo) # probar sino con documento[0]
+        self.e_autor.insert(0, documento.autor) # probar sino con documento[0]
+        self.e_idioma.insert(0, documento.idioma) # probar sino con documento[0]
+        if documento.formato_id == 1000:
             self.e_formato.set("físico")
         else: 
             self.e_formato.set("pdf")
-        self.e_isbn.insert(0, libro[0].isbn)
-        self.e_editorial.insert(0, libro[0].editorial)
-        self.e_fecha.insert(0, str(libro[0].fecha_publicacion))
-        self.e_tematica.insert(0, libro[0].tematica)
+        self.e_isbn.insert(0, libro.isbn) # probar sino con libro[0]
+        self.e_editorial.insert(0, libro.editorial) # probar sino con libro[0]
+        self.e_fecha.insert(0, str(libro.fecha_publicacion)) # probar sino con libro[0]
+        self.e_tematica.insert(0, libro.tematica) # probar sino con libro[0]
         self.e_genero.current(0)
         self.e_categoria.current(0)
 

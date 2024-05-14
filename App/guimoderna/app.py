@@ -301,7 +301,10 @@ class App(Window):
         pantalla_estantes.place(x=0, y=0, width=1260, height=710)
 
     def ver_biblioteca(self):
-        pass
+        if len(self.estantes) == 0:
+            Messagebox.show_info(title="Éxito", message="No hay estantes creados. Necesitas crear estantes.")
+        else:
+            pass
     
     # PARA SOLICITAR CONTRASEÑA
     def check_pass(self, tipo):

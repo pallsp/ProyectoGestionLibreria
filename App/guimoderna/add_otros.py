@@ -71,7 +71,7 @@ class AddOtro(Frame):
                 else:
                     formato = "PDF"
                 datosOtro = self.database_manager.selectOtroById(documento.id) # obtengo los datos del libro
-                fila = [documento.id, documento.titulo, documento.autor, documento.idioma, formato, datosOtro[0].emisor, datosOtro[0].tipo, datosOtro[0].subtipo]
+                fila = [documento.id, documento.titulo, documento.autor, documento.idioma, formato, datosOtro.emisor, datosOtro.tipo, datosOtro.subtipo] # probar sino con datosOtro[0]
                 dato.append(fila)
         self.tableview.build_table_data(self.coldata,dato)
 
@@ -148,18 +148,18 @@ class AddOtro(Frame):
         self.limpiar()
         dato = self.tableview.view.item(self.tableview.view.selection())["values"]
         self.doc_id_editar = int(dato[0]) # id del otro y documento a editar
-        documento = self.database_manager.selectDocumentsById(self.doc_id_editar)
+        documento = self.database_manager.selectDocumentById(self.doc_id_editar)
         otro = self.database_manager.selectOtroById(self.doc_id_editar)
-        self.e_titulo.insert(0, documento[0].titulo)
-        self.e_autor.insert(0, documento[0].autor)
-        self.e_idioma.insert(0, documento[0].idioma)
-        if documento[0].formato_id == 1000:
+        self.e_titulo.insert(0, documento.titulo) # probar sino con documento[0]
+        self.e_autor.insert(0, documento.autor)
+        self.e_idioma.insert(0, documento.idioma)
+        if documento.formato_id == 1000:
             self.e_formato.set("físico")
         else: 
             self.e_formato.set("pdf")
-        self.e_emisor.insert(0, otro[0].emisor)
-        self.e_fecha.insert(0, str(otro[0].fecha))
-        self.e_tipo.insert(0, otro[0].tipo)
+        self.e_emisor.insert(0, otro.emisor) # probar sino con otro[0]
+        self.e_fecha.insert(0, str(otro.fecha))
+        self.e_tipo.insert(0, otro.tipo)
         self.e_subtipo.current(0)
 
     def eliminar(self):

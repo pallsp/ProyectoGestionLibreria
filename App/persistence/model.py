@@ -5,11 +5,10 @@ from sqlalchemy.orm import sessionmaker, relationship
 Base = declarative_base()
 
 #tablas intermedias para las relaciones muchos a muchos
-documento_estante = Table('documento_estante', Base.metadata, 
+"""documento_estante = Table('documento_estante', Base.metadata, 
                           Column("documento_id", Integer, ForeignKey("documento.id"), primary_key=True), 
                           Column("estante_id", Integer, ForeignKey("estante.id"), primary_key=True)
-                        )
-
+                        )"""
 
 class Auth_User(Base):
     __tablename__ = "auth_user"
@@ -66,7 +65,13 @@ class Estante(Base):
     biblioteca = relationship("Biblioteca", back_populates="estantes")
 
     #relación con la tabla documento
-    documentos = relationship("Documento", secondary=documento_estante, back_populates="estantes")
+    documentos = relationship("Documento", secondary="documento_estante", back_populates="estantes")
+
+class DocumentoEstante(Base):
+    __tablename__ = "documento_estante"
+
+    documento_id = Column(Integer, ForeignKey('documento.id'), primary_key=True)
+    estante_id = Column(Integer, ForeignKey('estante.id'), primary_key=True)
 
 class Formato(Base):
     __tablename__ = "formato"
@@ -91,7 +96,7 @@ class Documento(Base):
     formato = relationship("Formato", back_populates="documentos")
 
     #relación con la tabla estante
-    estantes = relationship("Estante", secondary=documento_estante, back_populates="documentos")
+    estantes = relationship("Estante", secondary="documento_estante", back_populates="documentos")
 
     #relación con la tabla libro
     libro = relationship("Libro", uselist=False, back_populates="documento")
