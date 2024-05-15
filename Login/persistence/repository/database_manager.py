@@ -530,6 +530,22 @@ class DatabaseManager():
                 session.close()
 
     # ----------TABLA DocumentoEstante----------
+    # INSERT DocumentoEstante
+    def insertDocumentoEstante(self, id_documento, id_estante):
+        try:
+            docest = DocumentoEstante()
+            docest.documento_id = id_documento
+            docest.estante_id = id_estante
+            session = self.Session()
+            session.add(docest)
+            session.commit()
+            print("Documento añadido con éxito al estante en la base de datos.")
+        except SQLAlchemyError as error:
+            session.rollback()
+            print(f"Error al añadir el documento al estante en la base de datos: {error}")
+        finally:
+            if session.is_active:
+                session.close()
 
     # DELETE DocumentoEstante
     def deleteDocumentoEstante(self, id_documento, id_estante):
@@ -552,8 +568,8 @@ class DatabaseManager():
         try:
             session = self.Session()
             #estantes = session.query(DocumentoEstante.estante_id).filter(DocumentoEstante.documento == id_documento).all()
-            #estantes = session.query(Estante).join(DocumentoEstante).filter(DocumentoEstante.documento_id == id_documento).all()
-            estantes = session.query(Estante).join(DocumentoEstante).filter(DocumentoEstante.documento_id == id_documento).options(joinedload('estantes')).all()
+            estantes = session.query(Estante).join(DocumentoEstante).filter(DocumentoEstante.documento_id == id_documento).all()
+            #estantes = session.query(Estante).join(DocumentoEstante).filter(DocumentoEstante.documento_id == id_documento).options(joinedload(DocumentoEstante.es)).all()
         except SQLAlchemyError as error:
             session.rollback()
             print(f"Error al obtener los estantes de la base de datos: {error}")
@@ -561,6 +577,19 @@ class DatabaseManager():
             if session.is_active:
                 session.close()
         return estantes
+
+    # SELECT * FROM ESTANTE WHERE id = id_document and id_estante = id_estante
+    def selectEstanteLibro(self, id_documento, id_estante):
+        try:
+            session = self.Session()
+            registro = session.query(DocumentoEstante).filter(DocumentoEstante.documento_id == id_documento,                                                 DocumentoEstante.estante_id == id_estante).first()
+        except SQLAlchemyError as error:
+            session.rollback()
+            print(f"Error al obtener los estantes de la base de datos: {error}")
+        finally:
+            if session.is_active:
+                session.close()
+        return registro
 
     # ----------TABLA FORMATO----------
 

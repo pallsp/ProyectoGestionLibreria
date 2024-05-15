@@ -14,18 +14,18 @@ from ttkbootstrap.tableview import Tableview
 from ttkbootstrap.dialogs import Messagebox
 
 class AddLibro(Frame):
-    def __init__(self, id, lista_estantes: list, master = None):
+    def __init__(self, id, master = None):
         super().__init__(master)
         #super().__init__(themename="superhero", size=(1260, 700), title="Interfaz moderna") #proporcion 1.8
         self.database_manager = DatabaseManager()
         self.user_id = id
         self.doc_id_editar = ""
         self.user: Usuario = self.database_manager.selectUserById(self.user_id)
-        self.estantes = lista_estantes
+        self.estantes = self.database_manager.selectAllEstantesByIdOwner(self.user_id)
         self.principal = master
+        self.is_new = True
         self.widgets()
         self.mostrar()
-        self.is_new = True
 
     def entry_label(self,frame,x,y,texto):
         lbl = Label(frame, text=texto,bootstyle=PRIMARY)
@@ -92,7 +92,8 @@ class AddLibro(Frame):
             if len(self.estantes) == 0 or self.e_estante.get() is None:
                 documento.estante = None
             else:
-                documento.estante = self.e_estante.get()
+                est = self.database_manager.selectEstanteByName(self.e_estante.get())
+                documento.estante = est.id
             documento.tipo = "Libro" #siempre va a ser libro
             documento.propietario_id = self.user_id
 
@@ -141,13 +142,13 @@ class AddLibro(Frame):
         self.e_titulo.delete(0, END)
         self.e_autor.delete(0, END)
         self.e_idioma.delete(0, END)
-        self.e_estante.delete(0,END)
+        self.e_estante.selection_clear()
         self.e_isbn.delete(0,END)
         self.e_editorial.delete(0, END)
         self.e_fecha.delete(0,END)
         self.e_tematica.delete(0,END)
-        self.e_genero.delete(0,END)
-        self.e_categoria.delete(0,END)
+        self.e_genero.selection_clear()
+        self.e_categoria.selection_clear()
     
     def editar(self):
         self.is_new = False
@@ -220,8 +221,11 @@ class AddLibro(Frame):
         rb_formato1.place(x=105, y=120)
         rb_formato2 = Radiobutton(lblframe1, text="PDF", variable=self.e_formato, value="pdf")
         rb_formato2.place(x=200, y=120)
-        opciones_estante = ["estante1", "estante2"] #habrá que rellenar 
-        self.e_estante = self.comboboxea(lblframe1, 5, 160, "Estante", self.estantes)
+        # rellenamos el combobox de los estantes
+        opciones_estantes=[]
+        for estante in self.estantes:
+            opciones_estantes.append(estante.nombre)
+        self.e_estante = self.comboboxea(lblframe1, 5, 160, "Estante", opciones_estantes)
 
         #campos de libro
         self.e_isbn = self.entry_label(lblframe1,5,200,"ISBN")

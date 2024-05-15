@@ -6,11 +6,10 @@ import hashlib
 from persistence.repository.database_manager import DatabaseManager
 
 class AddDocumentos(Frame):
-    def __init__(self, id, lista_estantes: list, master = None):
+    def __init__(self, id, master = None):
         super().__init__(master)
         self.database_manager = DatabaseManager()
         self.user_id = id
-        self.estantes = lista_estantes
         self.principal = master
         self.widgets()
     
@@ -31,12 +30,12 @@ class AddDocumentos(Frame):
 
     def add_libro(self):
         self.limpiar_pantalla(self.principal)
-        pantalla_documentos = AddLibro(self.user_id, self.estantes, self.principal)
+        pantalla_documentos = AddLibro(self.user_id, self.principal)
         pantalla_documentos.place(x=0, y=0, width=1260, height=710)
 
     def add_otro(self):
         self.limpiar_pantalla(self.principal)
-        pantalla_documentos = AddOtro(self.user_id, self.estantes , self.principal)
+        pantalla_documentos = AddOtro(self.user_id, self.principal)
         pantalla_documentos.place(x=0, y=0, width=1260, height=710)
 
     def check_pass(self, tipo):

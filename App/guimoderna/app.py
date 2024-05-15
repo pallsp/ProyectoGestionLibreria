@@ -13,6 +13,7 @@ from ttkbootstrap import font
 from crear_estantes import AddEstantes
 import sys
 import hashlib
+from ver_biblioteca import VerBiblioteca
 
 class App(Window):
     def __init__(self, themename = "superhero"):
@@ -27,7 +28,7 @@ class App(Window):
         #self.user_id = 1
         self.user: Usuario = self.database_manager.selectUserById(self.user_id) # obtengo el usuario a partir del user_id
         self.perfil = ""
-        self.estantes = [] # lista con los nombres de los estantes
+        self.estantes = self.database_manager.selectAllEstantesByIdOwner(self.user_id) # lista con los estantes
         #self.banner = utl_img.leer_imagen("/home/pablo/PROYECTO/App/imagenes/banner_recortado.png", (276,70)) # fuente Ruda color #2e4b4b
         #self.set_image_perfil("/home/pablo/Escritorio/ProyectoFinalDAM/LibreriaGestion/login/sidebar_menu/imagenes/libreriologo.png") # foto predeterminada SE PUEDE CAMBIAR
         self.set_image_perfil(self.user.foto)
@@ -166,7 +167,7 @@ class App(Window):
         # ELEMENTOS FRAME TOP 
         #self.tk.call('font', 'create', 'custom_icons', '-family', 'CustomIcons', '-file', '/home/pablo/PROYECTO/App/icons/icomoon.ttf')
 
-        # Crear un widget con el icono personalizado
+        # Crear un widget con el icono personalizado 
         font_awesome = font.Font(family='FontAwesome', size=12)
         self.btnocultar = tk.Button(self.lblFrameTop, text="\uf0c9", font=font_awesome, command=self.toggle_menu_lateral, bd=0, bg="#df5553", fg="white")
         self.btnocultar.place(x=210, y=40)
@@ -177,6 +178,12 @@ class App(Window):
         self.labelPerfil = Label(self.lblimageperfil, image=self.perfil)
         self.labelPerfil.pack(side=tk.TOP, fill=BOTH, expand=True)
         
+        self.btninfo = tk.Button(self.lblFrameTop, text="\u24D8", font=font_awesome, command=self.open_info, bd=0, bg="#df5553", fg="white")
+        self.btninfo.place(x=1420, y=5, width=30, height=30) 
+
+        self.btnlicense = tk.Button(self.lblFrameTop, text=u"\U0001F12F", font=font_awesome, command=self.open_license, bd=0, bg="#df5553", fg="white")
+        self.btnlicense.place(x=1460, y=5, width=30, height=30) 
+
         #self.lblimagebanner = Frame(self.lblFrameTop, bootstyle = INFO)
         #self.lblimagebanner.place(x=750, y=0, width=276, height=70)
         label_titulo = ttk.Label(text="LIBRERIO BIBLIOTECA", font=("Ruda", 30), foreground="#dc3545")
@@ -188,25 +195,31 @@ class App(Window):
 
         # BOTONES MENU LATERAL
         btndocumentos = Button(self.lblFrameLateral, text="Añadir documentos", bootstyle = WARNING, command=self.ver_documentos)
-        btndocumentos.place(x=30,y=10,width=200)
+        btndocumentos.place(x=30, y=10, width=200)
 
-        self.btnestante = Button(self.lblFrameLateral, text="Crear estantes", bootstyle = WARNING, command=lambda: self.show_confirm_passw("estantes"))
-        self.btnestante.place(x=30,y=70,width=200)
+        self.btnestante = Button(self.lblFrameLateral, text="Crear estantes", bootstyle = WARNING, command=lambda: self.show_confirm_passw("crear estantes"))
+        self.btnestante.place(x=30, y=70, width=200)
 
-        btnbiblioteca = Button(self.lblFrameLateral, text="Ver biblioteca", bootstyle = WARNING, command=self.ver_biblioteca)
-        btnbiblioteca.place(x=30,y=130,width=200)
+        self.btnbiblioteca = Button(self.lblFrameLateral, text="Ver biblioteca", bootstyle = WARNING, command=lambda: self.show_confirm_passw("biblioteca"))
+        self.btnbiblioteca.place(x=30, y=130, width=200)
+
+        self.btnvisor = Button(self.lblFrameLateral, text="Visor pdf", bootstyle = WARNING, command=self.open_visor)
+        self.btnvisor.place(x=30, y=190, width=200)
 
         self.boton_cambiar_tema = ttk.Checkbutton(self.frameLateral, text="Modo oscuro", command=self.cambiar_tema, bootstyle="info-round-toggle")
-        self.boton_cambiar_tema.place(x=30, y=225)
+        self.boton_cambiar_tema.place(x=30, y=280)
 
-        self.btnajustes = Button(self.lblFrameLateral,text="Ajustes", bootstyle = WARNING, command=self.open_ajustes)
-        self.btnajustes.place(x=30,y=650,width=200)
+        self.btnmanual = Button(self.lblFrameLateral, text="Manual usuario", bootstyle = WARNING, command=self.open_manual)
+        self.btnmanual.place(x=30, y=450, width=200)
+
+        self.btnajustes = Button(self.lblFrameLateral,text="Ajustes", bootstyle = WARNING, command=lambda: self.show_confirm_passw("ajustes")) #command=self.open_ajustes
+        self.btnajustes.place(x=30, y=650, width=200)
 
         self.lblimageperfil_lat = Frame(self.lblFrameLateral, bootstyle = INFO)
-        self.lblimageperfil_lat.place(x=30,y=560, width=70, height=70)
+        self.lblimageperfil_lat.place(x=30, y=560, width=70, height=70)
 
-        self.labelPerfil = Label(self.lblimageperfil_lat, image=self.perfil)
-        self.labelPerfil.pack(side=tk.TOP, fill=BOTH, expand=True)
+        self.labelPerfil_lat = Label(self.lblimageperfil_lat, image=self.perfil)
+        self.labelPerfil_lat.pack(side=tk.TOP, fill=BOTH, expand=True)
 
         lbl_nombre = Label(self.lblFrameLateral, text=self.user.nombre, bootstyle=PRIMARY)
         lbl_nombre.place(x=120,y=580)
@@ -280,6 +293,39 @@ class App(Window):
         #self.tableview.view.bind("<Double-1>",self.eventos)
         #self.tableview.align_column_center()
 
+    def open_info(self):
+        self.popup = tk.Toplevel(self.lblFramePrincipal)
+        self.popup.geometry("300x100")
+        self.popup.resizable(False, False)
+        ttk.Label(self.popup, text="Autor: Pablo Pallàs").place(x=30, y=20)
+        ttk.Label(self.popup, text="Versión: 1.0").place(x=30, y=60)
+
+    def open_license(self):
+        self.popup = tk.Toplevel(self.lblFramePrincipal)
+        self.popup.geometry("600x800")
+        self.popup.resizable(False, False)
+        self.popup.title("Licencia GNU GPLv3")
+
+        scrollbar = ttk.Scrollbar(self.popup)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        text_area = tk.Text(self.popup, wrap="word", yscrollcommand=scrollbar.set)
+        text_area.pack(fill=tk.BOTH, expand=True)
+
+        # leemos el .txt con la licencia
+        with open("/home/pablo/PROYECTO/App/guimoderna/license.txt", "r") as file:
+            text = file.read()
+        # insertamos el texto en el widget text
+        text_area.insert(tk.END, text)
+        # configuramos la barra de desplazamiento para que se mueva junto con el texto 
+        scrollbar.config(command=text_area.yview)
+    
+    def open_visor(self):
+        pass
+    
+    def open_manual(self):
+        pass
+
     def limpiar_pantalla(self, panel):
         for widget in panel.winfo_children():
             widget.destroy()
@@ -292,38 +338,44 @@ class App(Window):
 
     def ver_documentos(self):
         self.limpiar_pantalla(self.lblFramePrincipal)
-        pantalla_documentos = AddDocumentos(self.user_id, self.estantes, self.lblFramePrincipal)
+        pantalla_documentos = AddDocumentos(self.user_id, self.lblFramePrincipal)
         pantalla_documentos.place(x=0, y=0, width=1260, height=710) # 260 100
 
     def nuevo_estante(self):
         self.limpiar_pantalla(self.lblFramePrincipal)
-        pantalla_estantes = AddEstantes(self.user_id, self.estantes, self.lblFramePrincipal)
+        pantalla_estantes = AddEstantes(self.user_id, self.lblFramePrincipal)
         pantalla_estantes.place(x=0, y=0, width=1260, height=710)
 
     def ver_biblioteca(self):
-        if len(self.estantes) == 0:
+        if len(self.database_manager.selectAllEstantesByIdOwner(self.user_id)) == 0:
             Messagebox.show_info(title="Éxito", message="No hay estantes creados. Necesitas crear estantes.")
         else:
-            pass
+            self.limpiar_pantalla(self.lblFramePrincipal)
+            pantalla_biblioteca = VerBiblioteca(self.user_id, self.lblFramePrincipal)
+            pantalla_biblioteca.place(x=0, y=0, width=1260, height=710)
     
     # PARA SOLICITAR CONTRASEÑA
     def check_pass(self, tipo):
         estado = False
         #user = self.database_manager.selectUserById(self.user_id)
         if self.do_hash(self.passw_entry.get()) == self.user.password: # porque guardo la contraseña hasheada
-            Messagebox.show_info(title="Éxito", message=f"Contraseña correcta. Puedes añadir {tipo}.")
+            Messagebox.show_info(title="Éxito", message=f"Contraseña correcta. Puedes entrar a {tipo}.")
             estado = True
         else: 
             Messagebox.show_error(title="Error", message="Contraseña incorrecta. Inténtalo de nuevo", alert=True)
         self.popup.destroy()
-        if estado and tipo == "estantes":
+        if estado and tipo == "crear estantes":
             self.nuevo_estante()
+        elif estado and tipo == "ajustes":
+            self.open_ajustes()
+        elif estado and tipo == "biblioteca":
+            self.ver_biblioteca()
 
     def show_confirm_passw(self, tipo):
         self.popup = tk.Toplevel(self.lblFramePrincipal)
         self.popup.geometry("400x200")
         self.popup.resizable(False, False)
-        ttk.Label(self.popup, text=f"Introduce la contraseña para poder añadir {tipo}: ").place(x=30,y=20)
+        ttk.Label(self.popup, text=f"Introduce la contraseña para poder ir a {tipo}: ").place(x=30,y=20)
         self.passw_entry = ttk.Entry(self.popup, show="*", width=30)
         self.passw_entry.place(x=80,y=65)
         self.passw_entry.focus_set()

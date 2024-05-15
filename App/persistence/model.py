@@ -59,7 +59,7 @@ class Estante(Base):
     tamano = Column(Integer, nullable=False)
     fecha_creacion = Column(Date)
     fecha_modificacion = Column(Date)
-    tipo = Column(Enum("LIBROS", "OTROS", "LIBROS/OTROS"))
+    tipo = Column(Enum("LIBRO", "OTRO", "LIBROS/OTROS"))
 
     #relación con la tabla biblioteca
     biblioteca = relationship("Biblioteca", back_populates="estantes")

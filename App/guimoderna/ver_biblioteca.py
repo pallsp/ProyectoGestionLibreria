@@ -8,18 +8,14 @@ from persistence.repository.database_manager import DatabaseManager
 import re 
 from datetime import datetime
 
-class AddEstantes(Frame):
+class VerBiblioteca(Frame):
     def __init__(self, id, master = None):
         super().__init__(master)
         self.database_manager = DatabaseManager()
         self.user_id = id
-        self.doc_id_editar = ""
         self.estantes = self.database_manager.selectAllEstantesByIdOwner(self.user_id)
         self.principal = master
-        self.is_new = True
         self.widgets()
-        self.mostrar_estantes()
-        self.mostrar_documentos()
     
     def entry_label(self,frame,x,y,texto):
         lbl = Label(frame, text=texto,bootstyle=PRIMARY)
@@ -194,127 +190,46 @@ class AddEstantes(Frame):
         self.btneditar.configure(state="disable")
         self.btneliminar.configure(state="disable")
 
-    def eventos_estantes(self, event):
-        print(self.tableviewEstantes.view.item(self.tableviewEstantes.view.selection())["values"])
-        self.btneditar.configure(state="normal")
-        self.btneliminar.configure(state="normal")
-
-    def eventos_docs(self, event):
-        print(self.tableviewDocs.view.item(self.tableviewDocs.view.selection())["values"])
-        self.btnseleccionar_doc.configure(state="normal")
+    def on_frame_configure(self, event):
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
     def widgets(self):
         # FRAMES
-        frame = Frame(self)
-        frame.pack(side = TOP, fill = BOTH, expand=True)
+        self.canvas = Canvas(self.principal)
+        self.canvas.pack(side=LEFT, fill=BOTH, expand=True)
 
-        frame1 = Frame(frame, bootstyle= INFO)
-        frame1.place(x=10, y=0, width=350, height=300)
+        """frame = Frame(self)
+        frame.pack(side = TOP, fill = BOTH, expand=True)"""
 
-        lblframe1 = Labelframe(frame1, text="Formulario estante", bootstyle= PRIMARY)
-        lblframe1.pack(side=TOP, fill=BOTH, expand=True)
+        scrollbar = Scrollbar(self.principal, orient=VERTICAL, command=self.canvas.yview)
+        scrollbar.pack(side=RIGHT, fill=Y)
+        """scrollbar = Scrollbar(frame, orient=VERTICAL)
+        scrollbar.pack(side=RIGHT, fill=Y)"""
+        self.canvas.configure(yscrollcommand=scrollbar.set)
+        frame = Frame(self.canvas)
+        self.canvas.create_window((0,0), window=frame, anchor='nw')
 
-        frame2 = Frame(frame, bootstyle=DANGER)
-        frame2.place(x=370, y=0, width=880, height=300)
+        frame.bind("<Configure>", self.on_frame_configure)
+        #frame.config(yscrollcommand=scrollbar.set)
+        #scrollbar.config(command=frame.yview)
+        
+        for i in range(50):
+            label = Label(frame, text=f"Elemento {i}")
+            label.pack()
+        """self.canvas = Canvas()
+        self.canvas.pack(side=LEFT, fill=BOTH, expand=True)
 
-        lblframe2 = LabelFrame(frame2, text="Datos estantes", bootstyle=SUCCESS)
-        lblframe2.pack(side=TOP, fill=BOTH, expand=True)
+        scrollbar = Scrollbar(self.principal, orient=VERTICAL, command=self.canvas.yview)
+        scrollbar.pack(side=RIGHT, fill=Y)
 
-        frame3 = Frame(frame, bootstyle= INFO)
-        frame3.place(x=10, y=310, width=350, height=380)
+        self.canvas.configure(yscrollcommand=scrollbar.set)
+        
+        frame = Frame(self.canvas)
+        self.canvas.create_window((0,0), window=frame, anchor='nw')
 
-        lblframe3 = LabelFrame(frame3, text="Añadir/Eliminar libro/otro", bootstyle=PRIMARY)
-        lblframe3.pack(side=TOP, fill=BOTH, expand=True)
+        frame.bind("<Configure>", self.on_frame_configure)"""
 
-        frame4 = Frame(frame, bootstyle= INFO)
-        frame4.place(x=370, y=310, width=880, height=380)
 
-        lblframe4 = LabelFrame(frame4, text="Datos libros", bootstyle=SUCCESS)
-        lblframe4.pack(side=TOP, fill=BOTH, expand=True)
-
-        # FORMULARIO CREAR ESTANTE
-        #campos de estante
-        self.e_nombre = self.entry_label(lblframe1, 5, 0, "Nombre")
-        self.e_tematica = self.entry_label(lblframe1, 5, 40, "Temática")
-        opciones_tipo = ["LIBRO", "OTRO", "LIBROS/OTROS"] 
-        self.e_tipo = self.comboboxea(lblframe1, 5, 80, "Tipo", opciones_tipo)
-
-        self.btnguardar = Button(lblframe1, text="Guardar", command=self.guardar)
-        self.btnguardar.place(x=10, y=150, width=135)
-
-        self.btneditar = Button(lblframe1, text="Editar", command=self.editar, bootstyle=SUCCESS)
-        self.btneditar.configure(state= "disable")
-        self.btneditar.place(x=10, y=190, width=135)
-
-        self.btneliminar = Button(lblframe1, text="Eliminar", command=self.eliminar, bootstyle=DANGER)
-        self.btneliminar.configure(state= "disable")
-        self.btneliminar.place(x=10, y=230, width=135)
-
-        # FORMULARIO AÑADIR/ELIMINAR LIBRO/OTRO
-        self.e_id = self.entry_label(lblframe3, 5, 0, "ID")
-        self.e_titulo = self.entry_label(lblframe3, 5, 40, "Título")
-        self.e_formato = self.entry_label(lblframe3, 5, 80, "Formato")
-        self.e_tipo_doc = self.entry_label(lblframe3, 5, 120, "Tipo")
-
-        self.btnseleccionar_doc = Button(lblframe3, text="Seleccionar", command=self.seleccionar, bootstyle=SUCCESS)
-        self.btnseleccionar_doc.configure(state= "disable")
-        self.btnseleccionar_doc.place(x=5, y=200, width=100)
-
-        self.btnadd_doc = Button(lblframe3, text="Añadir", command=self.add_doc_estante, bootstyle=SUCCESS)
-        self.btnadd_doc.configure(state= "disable")
-        self.btnadd_doc.place(x=5, y=260, width=100)
-        """# rellenamos el combobox con los estantes
-        opciones_estantes = []
-        for estante in self.estantes:
-            opciones_estantes.append(estante.nombre)"""
-        self.combo_estantes_add = Combobox(lblframe3, values=[])
-        self.combo_estantes_add.place(x=125, y=260)
-
-        self.btneliminar_doc = Button(lblframe3, text="Eliminar", command=self.delete_doc_estante, bootstyle=DANGER)
-        self.btneliminar_doc.configure(state= "disable")
-        self.btneliminar_doc.place(x=5, y=320, width=100)
-        self.combo_estantes_delete = Combobox(lblframe3, values=[])
-        self.combo_estantes_delete.place(x=125, y=320)
-
-        # TABLA LBLFRAME2
-        self.coldataEstantes = [
-            {"text":"ID", "width":200},
-            {"text":"Nombre", "width":300},
-            {"text":"Temática", "stretch":True},
-            {"text":"Tipo", "width":50},
-            {"text":"Tamaño", "width":30},
-        ]
-        self.tableviewEstantes = Tableview(lblframe2, 
-                              paginated=True,
-                              searchable=True,
-                              bootstyle=(SUCCESS),
-                              stripecolor=("snow", "black"), #"cyan", None
-                              autoalign=True,
-                              autofit=True,
-                              height=15,
-                              delimiter=";")
-        self.tableviewEstantes.pack(fill=BOTH, expand=True,padx=5,pady=5)
-        self.tableviewEstantes.view.bind("<Double-1>", self.eventos_estantes)
-        self.tableviewEstantes.align_column_center()
-
-        # TABLA LBLFRAME4
-        self.coldataDocs = [
-            {"text":"ID", "width":200},
-            {"text":"Título", "stretch":True},
-            {"text":"Formato", "width":200},
-            {"text":"Tipo", "width":50},
-        ]
-        self.tableviewDocs = Tableview(lblframe4, 
-                              paginated=True,
-                              searchable=True,
-                              bootstyle=(SUCCESS),
-                              stripecolor=("snow", "black"),
-                              autoalign=True,
-                              autofit=True,
-                              height=15,
-                              delimiter=";")
-        self.tableviewDocs.pack(fill=BOTH, expand=True,padx=5,pady=5)
-        self.tableviewDocs.view.bind("<Double-1>", self.eventos_docs)
-        self.tableviewDocs.align_column_center()
+        
 
     

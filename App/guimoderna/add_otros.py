@@ -18,16 +18,16 @@ from ttkbootstrap.tableview import Tableview
 from ttkbootstrap.dialogs import Messagebox
 
 class AddOtro(Frame):
-    def __init__(self, id, lista_estantes: list, master = None):
+    def __init__(self, id, master = None):
         super().__init__(master)
         self.database_manager = DatabaseManager()
         self.user_id = id
         self.doc_id_editar = ""
-        self.estantes = lista_estantes
+        self.estantes = self.database_manager.selectAllEstantesByIdOwner(self.user_id)
         self.principal = master
+        self.is_new = True
         self.widgets()
         self.mostrar()
-        self.is_new = True
     
     def entry_label(self, frame, x, y, texto):
         lbl = Label(frame, text=texto, bootstyle=PRIMARY)
@@ -90,7 +90,8 @@ class AddOtro(Frame):
             if len(self.estantes) == 0 or self.e_estante.get() is None:
                 documento.estante = None
             else:
-                documento.estante = self.e_estante.get()
+                est = self.database_manager.selectEstanteByName(self.e_estante.get())
+                documento.estante = est.id
             documento.tipo = "Otro" #siempre va a ser otro
             documento.propietario_id = self.user_id
 
