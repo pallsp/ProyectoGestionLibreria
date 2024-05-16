@@ -110,7 +110,8 @@ class AddOtro(Frame):
             if self.is_new: # si no es una actualización
                 #añadimos el otro
                 self.database_manager.insertOtro(otro)
-                #Messagebox.show_error(tittle="Error",message="El libro ya esta registrado",alert=True)
+                if not (self.e_estante.get() is None or self.e_estante.get() == "Ninguno"):
+                    self.database_manager.insertDocumentoEstante(documento.id, documento.estante)
                 Messagebox.show_info(title="Éxito", message="Datos guardados con éxito")
             else: # es una actualización
                 valor = Messagebox.show_question(title="Alerta", message="¿Estás seguro de que deseas actualizar el documento otro?", alert=True)

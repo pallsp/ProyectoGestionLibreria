@@ -198,24 +198,60 @@ class VerBiblioteca(Frame):
         self.canvas = Canvas(self.principal)
         self.canvas.pack(side=LEFT, fill=BOTH, expand=True)
 
-        """frame = Frame(self)
-        frame.pack(side = TOP, fill = BOTH, expand=True)"""
-
         scrollbar = Scrollbar(self.principal, orient=VERTICAL, command=self.canvas.yview)
         scrollbar.pack(side=RIGHT, fill=Y)
-        """scrollbar = Scrollbar(frame, orient=VERTICAL)
-        scrollbar.pack(side=RIGHT, fill=Y)"""
+        
         self.canvas.configure(yscrollcommand=scrollbar.set)
         frame = Frame(self.canvas)
         self.canvas.create_window((0,0), window=frame, anchor='nw')
 
         frame.bind("<Configure>", self.on_frame_configure)
+
+        for estante in self.estantes:
+            nombre_estante = estante.nombre
+            tematica_estante = estante.tematica
+            docs = self.database_manager.selectDocsEstante(estante.id) # obtengo los documentos de ese estante
+            subframe = Frame(frame, bootstyle = INFO)
+            subframe.pack(side = TOP, fill = BOTH, expand=True, padx=10)
+            subframe.config(width=1220, height=400)
+            subframe.pack_propagate(False)
+
+            lblframe1 = Labelframe(subframe, text=f"Formulario del estante {nombre_estante}", bootstyle= PRIMARY)
+            lblframe1.pack(side=TOP, fill=BOTH, expand=True)
+
+            label_nombre = Label(lblframe1, text=f"Estante {nombre_estante}")
+            label_nombre.place(x=500, y=5)
+
+            label_tematica = Label(lblframe1, text=f"Temática: {tematica_estante}")
+            label_tematica.place(x=700, y=5)
+
+            # para cada documento del estante creo un marco para la portada y el nombre
+            for index, doc in enumerate(docs):
+                frame_doc = Frame(lblframe1)
+                frame_doc.place(x=index*100, y=5, width=150, height=200)
+
+                label_titulo_doc = Label(frame_doc, text=doc.titulo)
+                label_titulo_doc.place(x=0, y=180)
+
+        self.canvas.update_idletasks()
+
+        """scrollbar = Scrollbar(frame, orient=VERTICAL)
+        scrollbar.pack(side=RIGHT, fill=Y)"""
+
+        """frame = Frame(self)
+        frame.pack(side = TOP, fill = BOTH, expand=True)"""
+
         #frame.config(yscrollcommand=scrollbar.set)
         #scrollbar.config(command=frame.yview)
+        """ frame1 = Frame(frame, bootstyle= INFO)
+            frame1.place(x=10, y=0, width=1200, height=200)
+
+            lblframe1 = Labelframe(frame1, text=f"Formulario estante{i}", bootstyle= PRIMARY)
+            lblframe1.pack(side=TOP, fill=BOTH, expand=True)
+
+            self.btnpulsame = Button(lblframe1, text="Guardar", command="")
+            self.btnpulsame.place(x=10, y=150, width=135)"""
         
-        for i in range(50):
-            label = Label(frame, text=f"Elemento {i}")
-            label.pack()
         """self.canvas = Canvas()
         self.canvas.pack(side=LEFT, fill=BOTH, expand=True)
 

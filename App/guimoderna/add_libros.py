@@ -89,7 +89,7 @@ class AddLibro(Frame):
             else:
                 documento.formato = self.database_manager.selectFormatoByTipo("PDF")
             # hay que guardar sí o sí un entero para estante pero cuidado porque no si no hay estantes no puede haber enteros
-            if len(self.estantes) == 0 or self.e_estante.get() is None:
+            if self.e_estante.get() is None or self.e_estante.get() == "Ninguno":
                 documento.estante = None
             else:
                 est = self.database_manager.selectEstanteByName(self.e_estante.get())
@@ -114,7 +114,8 @@ class AddLibro(Frame):
             if self.is_new: # si no es una actualización
                 #añadimos el libro
                 self.database_manager.insertLibro(libro)
-                #Messagebox.show_error(tittle="Error",message="El libro ya esta registrado",alert=True)
+                if not (self.e_estante.get() is None or self.e_estante.get() == "Ninguno"):
+                    self.database_manager.insertDocumentoEstante(documento.id, documento.estante)
                 Messagebox.show_info(title="Éxito", message="Datos guardados con éxito")
             else: # es una actualización
                 valor = Messagebox.show_question(title="Alerta", message="¿Estás seguro de que deseas actualizar el libro?", alert=True)
@@ -142,13 +143,13 @@ class AddLibro(Frame):
         self.e_titulo.delete(0, END)
         self.e_autor.delete(0, END)
         self.e_idioma.delete(0, END)
-        self.e_estante.selection_clear()
+        self.e_estante.current(0)
         self.e_isbn.delete(0,END)
         self.e_editorial.delete(0, END)
         self.e_fecha.delete(0,END)
         self.e_tematica.delete(0,END)
-        self.e_genero.selection_clear()
-        self.e_categoria.selection_clear()
+        self.e_genero.delete(0, END) # podría ser también .selection_clear()
+        self.e_categoria.delete(0, END)
     
     def editar(self):
         self.is_new = False
@@ -215,14 +216,14 @@ class AddLibro(Frame):
         #opciones_formato = ["Físico", "PDF"]
         #self.e_formato = self.comboboxea(lblframe1,5,120,"Formato",opciones_formato)
         self.e_formato = StringVar()
-        lbl = Label(lblframe1, text="Formato",bootstyle=PRIMARY)
+        lbl = Label(lblframe1, text="Formato", bootstyle=PRIMARY)
         lbl.place(x=5,y=120)
         rb_formato1 = Radiobutton(lblframe1, text="Físico", variable=self.e_formato, value="físico")
         rb_formato1.place(x=105, y=120)
         rb_formato2 = Radiobutton(lblframe1, text="PDF", variable=self.e_formato, value="pdf")
         rb_formato2.place(x=200, y=120)
         # rellenamos el combobox de los estantes
-        opciones_estantes=[]
+        opciones_estantes=['Ninguno']
         for estante in self.estantes:
             opciones_estantes.append(estante.nombre)
         self.e_estante = self.comboboxea(lblframe1, 5, 160, "Estante", opciones_estantes)

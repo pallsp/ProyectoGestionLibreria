@@ -170,6 +170,7 @@ class AddEstantes(Frame):
         self.e_id.delete(0, END)
         self.e_titulo.delete(0, END)
         self.e_formato.delete(0, END)
+        self.e_tipo_doc.delete(0, END)
         self.combo_estantes_add.delete(0, END)    # probar esto tambien .set("")
         self.combo_estantes_delete.delete(0, END)
 

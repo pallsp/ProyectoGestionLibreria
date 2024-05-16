@@ -591,6 +591,22 @@ class DatabaseManager():
                 session.close()
         return registro
 
+    # SELECT * FROM Documento WHERE id_estante = id_estante
+    def selectDocsEstante(self, id_estante):
+        docs = []
+        try:
+            session = self.Session()
+            #estantes = session.query(DocumentoEstante.estante_id).filter(DocumentoEstante.documento == id_documento).all()
+            docs = session.query(Documento).join(DocumentoEstante).filter(DocumentoEstante.estante_id == id_estante).all()
+            #estantes = session.query(Estante).join(DocumentoEstante).filter(DocumentoEstante.documento_id == id_documento).options(joinedload(DocumentoEstante.es)).all()
+        except SQLAlchemyError as error:
+            session.rollback()
+            print(f"Error al obtener los documentos de la base de datos: {error}")
+        finally:
+            if session.is_active:
+                session.close()
+        return docs
+
     # ----------TABLA FORMATO----------
 
     # INSERT FORMATO
