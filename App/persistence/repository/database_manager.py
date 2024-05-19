@@ -182,7 +182,7 @@ class DatabaseManager():
             documento = session.query(Documento).filter(Documento.id == id).first()
         except SQLAlchemyError as error:
             session.rollback()
-            print(f"Error al obtene el documento de la base de datos: {error}")
+            print(f"Error al obtener el documento de la base de datos: {error}")
         finally:
             if session.is_active:
                 session.close()
@@ -209,6 +209,19 @@ class DatabaseManager():
         except SQLAlchemyError as error:
             session.rollback()
             print(f"Error al obtener los documentos de la base de datos: {error}")
+        finally:
+            if session.is_active:
+                session.close()
+        return documentos
+    
+    # SELECT * FROM Documents WHERE tipo = Libro and id_propietario = id
+    def selectAllDocumentosPDF(self, user_id):
+        try:
+            session = self.Session()
+            documentos = session.query(Documento).filter(Documento.propietario_id == user_id, Documento.formato_id == 1001).all()
+        except SQLAlchemyError as error:
+            session.rollback()
+            print(f"Error al obtener los documentos en pdf de la base de datos: {error}")
         finally:
             if session.is_active:
                 session.close()
@@ -533,10 +546,10 @@ class DatabaseManager():
     # INSERT DocumentoEstante
     def insertDocumentoEstante(self, id_documento, id_estante):
         try:
+            session = self.Session()
             docest = DocumentoEstante()
             docest.documento_id = id_documento
             docest.estante_id = id_estante
-            session = self.Session()
             session.add(docest)
             session.commit()
             print("Documento añadido con éxito al estante en la base de datos.")

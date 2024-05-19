@@ -147,7 +147,7 @@ class Libro(Base):
 
 class Otro(Base):
     __tablename__ = "otro"
-    id = Column(Integer, ForeignKey("documento.id"), primary_key=True)
+    id_documento = Column(Integer, ForeignKey("documento.id"), primary_key=True)
     propietario_id = Column(Integer, ForeignKey("usuario.id"), primary_key=True)
     emisor = Column(String(50))
     fecha = Column(Date)
