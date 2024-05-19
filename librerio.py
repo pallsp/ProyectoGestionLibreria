@@ -12,9 +12,10 @@ def ejecutar_login():
     resultado_login = subprocess.run(["python3", "Login/main.py"], capture_output=True) #capture_output=True
     resultado = resultado_login.stdout.strip().decode()
     return resultado
+
 def ejecutar_app(user_id):
     # Ejecutar app.py como un proceso separado
-    subprocess.run(["python3", "App/guimoderna/app.py", str(user_id)]) # le paso como argumento el id de usuario
+    subprocess.run(["python3", "App/forms/app.py", str(user_id)]) # le paso como argumento el id de usuario
 
 def main():
     try:
