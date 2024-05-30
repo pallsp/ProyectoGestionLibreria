@@ -16,13 +16,13 @@ class AddDocumentos(Frame):
     def widgets(self):
         # BOTONES CENTRALES
         #font_botones = font.Font(family= "Times", size= 20, weight= "bold")
-        btnlibros = Button(self.principal,text="LIBRO", bootstyle = SUCCESS, command=lambda: self.show_confirm_passw("libros"))
+        btnlibros = Button(self.principal, text="LIBRO", bootstyle = SUCCESS, command=lambda: self.show_confirm_passw("libros"))
         #btnlibros.config(font=("Times", 20))
-        btnlibros.place(x=300, y=300, width=200, height=150)
+        btnlibros.place(x=350, y=250, width=200, height=150)
 
         btnotro = Button(self.principal, text="OTRO", bootstyle = DANGER, command=lambda: self.show_confirm_passw("otro"))
         #btnotro.config(font=("Times", 20))
-        btnotro.place(x=520, y=300, width=200, height=150)
+        btnotro.place(x=570, y=250, width=200, height=150)
 
     def limpiar_pantalla(self, panel):
         for widget in panel.winfo_children():
@@ -42,10 +42,10 @@ class AddDocumentos(Frame):
         estado = False
         user = self.database_manager.selectUserById(self.user_id)
         if self.do_hash(self.passw_entry.get()) == user.password: # porque guardo la contraseña hasheada
-            Messagebox.show_info(title="Éxito", message=f"Contraseña correcta. Puedes añadir {tipo}.")
+            Messagebox.show_info(title="Éxito", message=f"Contraseña correcta. Puedes añadir {tipo}.", parent=self.popup)
             estado = True
         else: 
-            Messagebox.show_error(title="Error", message="Contraseña incorrecta. Inténtalo de nuevo", alert=True)
+            Messagebox.show_error(title="Error", message="Contraseña incorrecta. Inténtalo de nuevo", alert=True, parent=self.popup)
         self.popup.destroy()
         if estado and tipo == "libros":
             self.add_libro()

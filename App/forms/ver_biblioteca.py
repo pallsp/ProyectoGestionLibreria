@@ -18,6 +18,7 @@ class VerBiblioteca(Frame):
         self.user_id = id
         self.estantes = self.database_manager.selectAllEstantesByIdOwner(self.user_id)
         self.principal = master
+        self.empty_image = ImageTk.PhotoImage(Image.new('RGBA', (120, 200), (255, 255, 255, 0)))
         self.tk_images = [] # lista para mantener las referencias de las imágenes
         self.widgets()
     
@@ -77,7 +78,7 @@ class VerBiblioteca(Frame):
         pass
 
     def limpiar(self):
-        self.label_img.config(image=None)
+        self.label_img.config(image=self.empty_image)
         self.e_titulo.delete(0, END)
         self.e_autor.delete(0, END)
         self.e_idioma.delete(0, END)
@@ -87,7 +88,7 @@ class VerBiblioteca(Frame):
         self.e_tematica.delete(0, END)
         self.e_emisor.delete(0, END)
         self.e_tipo.delete(0, END)
-        self.e_subtipo.delete(0, END)
+        self.btnlimpiar.configure(state="disabled")
 
     def editar(self):
         pass
@@ -98,16 +99,20 @@ class VerBiblioteca(Frame):
     def on_frame_configure(self, event):
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
+    # OBTENER DE API
     def fetch_book_cover(self, isbn):
-        url = f"https://covers.openlibrary.org/b/isbn/{isbn}-M.jpg"
+        url = f"https://covers.openlibrary.org/b/isbn/{isbn}-M.jpg?default=false"
         response = requests.get(url)
-
         if response.status_code == 200: 
             image_data = response.content
             return Image.open(BytesIO(image_data))
+        elif response.status_code == 404:
+            print("Imagen no encontrada")
+            return None
         else:
             raise Exception("No se pudo recuperar la imagen de la portada")
 
+    # TRASLADAR DATOS
     def move_data(self, doc:Documento):
         self.limpiar()
         self.e_titulo.insert(0, doc.titulo)
@@ -125,19 +130,32 @@ class VerBiblioteca(Frame):
             self.e_fecha.insert(0, otro.fecha)
             self.e_emisor.insert(0, otro.emisor)
             self.e_tipo.insert(0, otro.tipo)
-            self.e_subtipo.insert(0, otro.subtipo)
             image = utl_img.leer_imagen("/home/pablo/PROYECTO/imagenes/notfound.jpg", (120, 200))
             self.tk_images.append(image)
             self.label_img = tk.Label(self.frame_img, image=image)
             self.label_img.place(x=5, y=0)  
+        self.btnlimpiar.configure(state= "normal")
 
     def set_cover(self, isbn):
-        image = self.fetch_book_cover(8420674265)
-        res_image = image.resize((120,200), Image.LANCZOS)
-        tk_image = ImageTk.PhotoImage(res_image) # size=(150, 250)
-        self.tk_images.append(tk_image)
-        self.label_img = tk.Label(self.frame_img, image=tk_image)
-        self.label_img.place(x=5, y=0)
+        try:
+            image = self.fetch_book_cover(isbn) #8420674265 para probar
+            if image:
+                res_image = image.resize((120,200), Image.LANCZOS)
+                tk_image = ImageTk.PhotoImage(res_image) # size=(150, 250)
+                self.tk_images.append(tk_image)
+                self.label_img = tk.Label(self.frame_img, image=tk_image)
+                self.label_img.place(x=5, y=0)
+            else:
+                image = utl_img.leer_imagen("/home/pablo/PROYECTO/imagenes/notfound.jpg", (120, 200))
+                self.tk_images.append(image)
+                self.label_img = tk.Label(self.frame_img, image=image)
+                self.label_img.place(x=5, y=0)
+        except Exception as error: 
+            print(f"Error al configurar la portada del libro: {error}")
+            image = utl_img.leer_imagen("/home/pablo/PROYECTO/imagenes/notfound.jpg", (120, 200))
+            self.tk_images.append(image)
+            self.label_img = tk.Label(self.frame_img, image=image)
+            self.label_img.place(x=5, y=0)
 
     def mostrar(self):
         formato = ""
@@ -189,12 +207,13 @@ class VerBiblioteca(Frame):
             nombre_estante = estante.nombre
             tematica_estante = estante.tematica
             docs = self.database_manager.selectDocsEstante(estante.id) # obtengo los documentos de ese estante
+            altura = 300*(len(docs)//3+1)
             subframe = Frame(otro_frame, bootstyle = INFO)
             subframe.pack(side = TOP, fill = BOTH, expand=True, padx=10)
-            subframe.config(width=850, height=300)
+            subframe.config(width=850, height=altura)
             subframe.pack_propagate(False)
 
-            otro_lblframe = Labelframe(subframe, text=f"Formulario del estante {nombre_estante}", bootstyle= PRIMARY)
+            otro_lblframe = Labelframe(subframe, text=f"Estante {nombre_estante}", bootstyle= PRIMARY)
             otro_lblframe.pack(side=TOP, fill=BOTH, expand=True)
 
             label_nombre = Label(otro_lblframe, text=f"Estante: {nombre_estante}")
@@ -205,8 +224,12 @@ class VerBiblioteca(Frame):
             frames_doc = []
             botones = []
             for index, doc in enumerate(docs):
-                frame_doc = Labelframe(lblframe1, text=doc.tipo, bootstyle=DANGER)
-                frame_doc.place(x=(index*200)+25, y=50, width=200, height=120)
+                i = index % 3
+                j = index//3 + 1
+                if j > 1:
+                    j+=2
+                frame_doc = Labelframe(otro_lblframe, text=doc.tipo, bootstyle=DANGER)
+                frame_doc.place(x=(i*200)+25, y=50*j, width=200, height=120)
 
                 label_titulo_doc = Label(frame_doc, text=doc.titulo)
                 label_titulo_doc.place(x=5, y=5, width=150)
@@ -250,99 +273,11 @@ class VerBiblioteca(Frame):
         # campos propios de otro
         self.e_emisor = self.entry_label(lblframe2, 5, 520, "Emisor")
         self.e_tipo = self.entry_label(lblframe2, 5, 560, "Tipo")
-        self.e_subtipo = self.entry_label(lblframe2, 5, 600, "Subtipo")
+        #self.e_subtipo = self.entry_label(lblframe2, 5, 600, "Subtipo")
 
-        """self.canvas = Canvas(self.principal)
-        self.canvas.pack(side=LEFT, fill=BOTH, expand=True)
-
-        scrollbar = Scrollbar(self.principal, orient=VERTICAL, command=self.canvas.yview)
-        scrollbar.pack(side=RIGHT, fill=Y)
-        
-        self.canvas.configure(yscrollcommand=scrollbar.set)
-        frame = Frame(self.canvas)
-        self.canvas.create_window((0,0), window=frame, anchor='nw')
-
-        frame.bind("<Configure>", self.on_frame_configure)
-
-        for estante in self.estantes:
-            nombre_estante = estante.nombre
-            tematica_estante = estante.tematica
-            docs = self.database_manager.selectDocsEstante(estante.id) # obtengo los documentos de ese estante
-            subframe = Frame(frame, bootstyle = INFO)
-            subframe.pack(side = TOP, fill = BOTH, expand=True, padx=10)
-            subframe.config(width=1220, height=500)
-            subframe.pack_propagate(False)
-
-            lblframe1 = Labelframe(subframe, text=f"Formulario del estante {nombre_estante}", bootstyle= PRIMARY)
-            lblframe1.pack(side=TOP, fill=BOTH, expand=True)
-
-            label_nombre = Label(lblframe1, text=f"Estante {nombre_estante}")
-            label_nombre.place(x=500, y=5)
-
-            label_tematica = Label(lblframe1, text=f"Temática: {tematica_estante}")
-            label_tematica.place(x=700, y=5)
-
-            image = self.fetch_book_cover(8420674265)
-            image.resize((60,100), Image.LANCZOS)
-            tk_image = ImageTk.PhotoImage(image) # size=(150, 250)
-            self.tk_images.append(tk_image)
-            label = tk.Label(lblframe1, image=tk_image)
-            label.place(x=0, y=100)
-
-        self.canvas.update_idletasks()"""
-
-
-
-
-        """# para cada documento del estante creo un marco para la portada y el nombre
-            for index, doc in enumerate(docs):
-                frame_doc = Frame(lblframe1)
-                frame_doc.place(x=index*100, y=5, width=300, height=400)
-
-                label_titulo_doc = Label(frame_doc, text=doc.titulo)
-                label_titulo_doc.place(x=0, y=0)
-
-                if doc.tipo == "Libro":
-                    #libro = self.database_manager.selectLibroById(doc.id)
-                    #image = self.fetch_book_cover(libro.isbn) # obtenemos la portada del documento en caso de que sea libro
-                    image = self.fetch_book_cover(8420674265)
-                    tk_image = ImageTk.PhotoImage(image) # size=(150, 250)
-                    label = tk.Label(frame_doc, image=tk_image)
-                    label.place(x=0, y=100)
-                else: 
-                    pass"""
-
-        
-
-        """scrollbar = Scrollbar(frame, orient=VERTICAL)
-        scrollbar.pack(side=RIGHT, fill=Y)"""
-
-        """frame = Frame(self)
-        frame.pack(side = TOP, fill = BOTH, expand=True)"""
-
-        #frame.config(yscrollcommand=scrollbar.set)
-        #scrollbar.config(command=frame.yview)
-        """ frame1 = Frame(frame, bootstyle= INFO)
-            frame1.place(x=10, y=0, width=1200, height=200)
-
-            lblframe1 = Labelframe(frame1, text=f"Formulario estante{i}", bootstyle= PRIMARY)
-            lblframe1.pack(side=TOP, fill=BOTH, expand=True)
-
-            self.btnpulsame = Button(lblframe1, text="Guardar", command="")
-            self.btnpulsame.place(x=10, y=150, width=135)"""
-        
-        """self.canvas = Canvas()
-        self.canvas.pack(side=LEFT, fill=BOTH, expand=True)
-
-        scrollbar = Scrollbar(self.principal, orient=VERTICAL, command=self.canvas.yview)
-        scrollbar.pack(side=RIGHT, fill=Y)
-
-        self.canvas.configure(yscrollcommand=scrollbar.set)
-        
-        frame = Frame(self.canvas)
-        self.canvas.create_window((0,0), window=frame, anchor='nw')
-
-        frame.bind("<Configure>", self.on_frame_configure)"""
+        self.btnlimpiar = Button(lblframe2, text="Limpiar", command=self.limpiar, bootstyle=SUCCESS)
+        self.btnlimpiar.configure(state= "disabled")
+        self.btnlimpiar.place(x=120, y=615, width=135)
 
 
         

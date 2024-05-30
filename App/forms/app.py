@@ -29,17 +29,25 @@ class App(Window):
         #self.user_id = 1
         self.user: Usuario = self.database_manager.selectUserById(self.user_id) # obtengo el usuario a partir del user_id
         self.perfil = ""
+        self.bannerinicio = ""
+        self.logotop = ""
         self.estantes = self.database_manager.selectAllEstantesByIdOwner(self.user_id) # lista con los estantes
         #self.banner = utl_img.leer_imagen("/home/pablo/PROYECTO/App/imagenes/banner_recortado.png", (276,70)) # fuente Ruda color #2e4b4b
         #self.set_image_perfil("/home/pablo/Escritorio/ProyectoFinalDAM/LibreriaGestion/login/sidebar_menu/imagenes/libreriologo.png") # foto predeterminada SE PUEDE CAMBIAR
-        self.set_image_perfil(self.user.foto)
+        self.set_images(self.user.foto)
         self.widgets()
-        #self.mostrar()
+        self.open_inicio()
         self.idlibro = -1
+        self.set_icon()
+        
+    def set_icon(self):
+        self.iconphoto(False, tk.PhotoImage(file="/home/pablo/PROYECTO/imagenes/libreriologo.png")) 
 
-    def set_image_perfil(self, path):
+    def set_images(self, path):
         self.perfil = utl_img.leer_imagen(path, (70, 70))
-
+        self.bannerinicio = utl_img.leer_imagen("/home/pablo/PROYECTO/imagenes/otrolibrerio.png", (600, 300))
+        self.logotop = utl_img.leer_imagen("/home/pablo/PROYECTO/imagenes/partelogo.png", (65,65))
+        
     def entry_label(self,frame,x,y,texto):
         lbl = Label(frame, text=texto,bootstyle=PRIMARY)
         lbl.place(x=x,y=y)
@@ -137,10 +145,18 @@ class App(Window):
             self.lblFrameLateral.pack(side=TOP, fill=BOTH, expand=True)
             self.framePrincipal.place(x=260,y=100,width=1260,height=710)
 
-    def cambiar_tema(self):
+    def cambiar_tema(self): # #222222
         # Cambiar el tema entre 'superhero' y 'darkly'
         self.tema_actual = 'darkly' if self.tema_actual == 'superhero' else 'superhero'
         self.estilo.theme_use(self.tema_actual)
+        if self.tema_actual == 'superhero':
+            self.logotop = utl_img.leer_imagen("/home/pablo/PROYECTO/imagenes/partelogo.png", (65,65))
+            self.label_logotop = Label(self.frameimagetop, image=self.logotop)
+            self.label_logotop.place(x=0, y=0)
+        else:
+            self.logotop = utl_img.leer_imagen("/home/pablo/PROYECTO/imagenes/partelogo_darkly.png", (65,65))
+            self.label_logotop = Label(self.frameimagetop, image=self.logotop)
+            self.label_logotop.place(x=0, y=0)
 
     def widgets(self):
         # FRAMES
@@ -166,8 +182,7 @@ class App(Window):
         self.lblFramePrincipal.pack(side=TOP, fill=BOTH, expand=True)
 
         # ELEMENTOS FRAME TOP 
-        #self.tk.call('font', 'create', 'custom_icons', '-family', 'CustomIcons', '-file', '/home/pablo/PROYECTO/App/icons/icomoon.ttf')
-
+        
         # Crear un widget con el icono personalizado 
         font_awesome = font.Font(family='FontAwesome', size=12)
         self.btnocultar = tk.Button(self.lblFrameTop, text="\uf0c9", font=font_awesome, command=self.toggle_menu_lateral, bd=0, bg="#df5553", fg="white")
@@ -185,31 +200,37 @@ class App(Window):
         self.btnlicense = tk.Button(self.lblFrameTop, text=u"\U0001F12F", font=font_awesome, command=self.open_license, bd=0, bg="#df5553", fg="white")
         self.btnlicense.place(x=1460, y=5, width=30, height=30) 
 
-        #self.lblimagebanner = Frame(self.lblFrameTop, bootstyle = INFO)
-        #self.lblimagebanner.place(x=750, y=0, width=276, height=70)
         label_titulo = ttk.Label(text="LIBRERIO BIBLIOTECA", font=("Ruda", 30), foreground="#dc3545")
-        label_titulo.place(x=550, y=30, width=500, height=60)
+        label_titulo.place(x=560, y=30, width=420, height=60)
         label_contacto = Label(text="libreriocontacto@gmail.com", bootstyle = LIGHT)
         label_contacto.place(x=1320, y=70)
-        #self.labelbanner = Label(self.lblimagebanner, image=self.banner)
-        #self.labelbanner.pack(side=tk.TOP, fill=BOTH, expand=True)
+        
+        self.frameimagetop = Frame(self.lblFrameTop, bootstyle = INFO)
+        self.frameimagetop.place(x=1010, y=5, width=65, height=65)
+
+        self.label_logotop = Label(self.frameimagetop, image=self.logotop)
+        self.label_logotop.place(x=0, y=0)
+        #self.label_logotop.pack(side=tk.TOP, fill=BOTH, expand=True)
 
         # BOTONES MENU LATERAL
-        btndocumentos = Button(self.lblFrameLateral, text="Añadir documentos", bootstyle = WARNING, command=self.ver_documentos)
+        btndocumentos = Button(self.lblFrameLateral, text="Gestionar documentos", bootstyle = WARNING, command=self.ver_documentos)
         btndocumentos.place(x=30, y=10, width=200)
 
-        self.btnestante = Button(self.lblFrameLateral, text="Crear estantes", bootstyle = WARNING, command=lambda: self.show_confirm_passw("crear estantes"))
+        self.btnestante = Button(self.lblFrameLateral, text="Gestionar estantes", bootstyle = WARNING, command=lambda: self.show_confirm_passw("crear estantes"))
         self.btnestante.place(x=30, y=70, width=200)
 
         self.btnbiblioteca = Button(self.lblFrameLateral, text="Ver biblioteca", bootstyle = WARNING, command=lambda: self.show_confirm_passw("biblioteca"))
         self.btnbiblioteca.place(x=30, y=130, width=200)
 
-        self.btnvisor = Button(self.lblFrameLateral, text="Visor pdf", bootstyle = WARNING, command=lambda: self.show_confirm_passw("visor"))
+        self.btnvisor = Button(self.lblFrameLateral, text="Visor PDF", bootstyle = WARNING, command=lambda: self.show_confirm_passw("visor"))
         self.btnvisor.place(x=30, y=190, width=200)
 
         self.boton_cambiar_tema = ttk.Checkbutton(self.frameLateral, text="Modo oscuro", command=self.cambiar_tema, bootstyle="info-round-toggle")
         self.boton_cambiar_tema.place(x=30, y=280)
 
+        self.btninicio = tk.Button(self.lblFrameLateral, text="\uf015", font=font_awesome, command=self.open_inicio, bd=0, bg="#df5553", fg="white")
+        self.btninicio.place(x=115, y=400)
+        
         self.btnmanual = Button(self.lblFrameLateral, text="Manual usuario", bootstyle = WARNING, command=self.open_manual)
         self.btnmanual.place(x=30, y=450, width=200)
 
@@ -224,75 +245,6 @@ class App(Window):
 
         lbl_nombre = Label(self.lblFrameLateral, text=self.user.nombre, bootstyle=PRIMARY)
         lbl_nombre.place(x=120,y=580)
-
-
-        #frame1 = Frame(frame, bootstyle= INFO)
-        #frame1.place(x=5,y=0,width=410,height=690)
-        #lblframe1 = Labelframe(frame1,text="Formulario",bootstyle= PRIMARY)
-        #lblframe1.pack(side=TOP, fill=BOTH, expand=True)
-
-        #frame2 = Frame(frame, bootstyle=DANGER)
-        #frame2.place(x=420,y=0,width=830,height=690)
-
-        #lblframe2 = LabelFrame(frame2, text="Datos",bootstyle= SUCCESS)
-        #lblframe2.pack(side=TOP, fill=BOTH, expand=True)
-
-
-        # FORMULARIO
-        #campos de documento
-        #self.e_titulo = self.entry_label(lblframe1,5,0,"Título")
-        #self.e_autor = self.entry_label(lblframe1,5,40,"Autor")
-        #self.e_idioma = self.entry_label(lblframe1,5,80,"Idioma")
-        #opciones_formato = ["Físico", "PDF"]
-        #self.e_formato = self.comboboxea(lblframe1,5,120,"Formato",opciones_formato)
-        #opciones_estante = ["estante1", "estante2"] #habrá que rellenar 
-        #self.e_estante = self.comboboxea(lblframe1,5,160,"Estante",opciones_estante)
-
-        #campos de libro
-        #self.e_isbn = self.entry_label(lblframe1,5,200,"ISBN")
-        #self.e_editorial = self.entry_label(lblframe1,5,240,"Editorial")
-        #self.e_fecha = self.entry_label(lblframe1,5,280,"Fecha")
-        #self.e_tematica = self.entry_label(lblframe1,5,320,"Temática")
-        #opciones_genero = ["No ficción", "Fantasía", "Ciencia ficción"] #habrá que rellenar 
-        #self.e_genero = self.comboboxea(lblframe1,5,360,"Género",opciones_genero)
-        #opciones_categoria = ["estante1", "estante2"] #habrá que rellenar 
-        #self.e_categoria = self.comboboxea(lblframe1,5,400,"Categoría",opciones_categoria)
-
-        #btnguardar = Button(lblframe1,text="Guardar",command=self.guardar)
-        #btnguardar.place(x=105,y=440,width=135)
-
-        #self.btneditar = Button(lblframe1,text="Editar",command=self.editar,bootstyle=SUCCESS)
-        #self.btneditar.configure(state= "disable")
-        #self.btneditar.place(x=10,y=480,width=200)
-
-        #self.btneliminar = Button(lblframe1,text="Eliminar",command=self.eliminar,bootstyle=DANGER)
-        #self.btneliminar.configure(state= "disable")
-        #self.btneliminar.place(x=10,y=520,width=200)
-
-        #frame2 = Frame(frame, bootstyle=DANGER)
-        #frame2.place(x=420,y=0,width=830,height=690)
-
-        #lblframe2 = LabelFrame(frame2, text="Datos",bootstyle= SUCCESS)
-        #lblframe2.pack(side=TOP, fill=BOTH, expand=True)
-        #self.coldata = [
-            #{"text":"ID","width":200},
-            #{"text":"Titulo","stretch":True},
-            #{"text":"Autor","width":200},
-            #"Idioma",
-            #{"text":"Editorial","width":200},
-        #]
-        #self.tableview = Tableview(lblframe2, 
-                              #paginated=True,
-                              #searchable=True,
-                              #bootstyle=(SUCCESS),
-                              #stripecolor=("snow", "black"), #"cyan", None
-                              #autoalign=True,
-                              #autofit=True,
-                              #height=15,
-                              #delimiter=";")
-        #self.tableview.pack(fill=BOTH, expand=True,padx=5,pady=5)
-        #self.tableview.view.bind("<Double-1>",self.eventos)
-        #self.tableview.align_column_center()
 
     def open_info(self):
         self.popup = tk.Toplevel(self.lblFramePrincipal)
@@ -329,7 +281,6 @@ class App(Window):
             pantalla_visor = VisorPDF(self.user_id, self.lblFramePrincipal)
             pantalla_visor.place(x=0, y=0, width=1260, height=710)
     
-    
     def open_manual(self):
         pass
 
@@ -338,9 +289,26 @@ class App(Window):
             widget.destroy()
 
     # CAMBIAR PANTALLAS
+    def open_inicio(self):
+        self.limpiar_pantalla(self.lblFramePrincipal)
+        
+        self.iniciobanner = Frame(self.lblFramePrincipal, bootstyle = INFO)
+        self.iniciobanner.place(x=300, y=50, width=600, height=300)
+
+        self.inicio_image = Label(self.iniciobanner, image=self.bannerinicio)
+        self.inicio_image.pack(side=tk.TOP, fill=BOTH, expand=True)
+        
+        text_area_license = tk.Text(self.lblFramePrincipal, wrap="word")
+        text_area_license.place(x=300, y=370, width=600, height=200)
+        
+        # leemos el .txt con la info a mostrar
+        with open("/home/pablo/PROYECTO/App/license/mostrar.txt", "r") as file:
+            text = file.read()
+        text_area_license.insert(tk.END, text)
+        
     def open_ajustes(self):
         self.limpiar_pantalla(self.lblFramePrincipal)
-        pantalla_ajustes = Ajustes(self.user_id, self.lblFramePrincipal)
+        pantalla_ajustes = Ajustes(self.user_id, self, self.lblFramePrincipal)
         pantalla_ajustes.place(x=0, y=0, width=1260, height=710)
 
     def ver_documentos(self):
@@ -355,7 +323,7 @@ class App(Window):
 
     def ver_biblioteca(self):
         if len(self.database_manager.selectAllEstantesByIdOwner(self.user_id)) == 0:
-            Messagebox.show_info(title="Error", message="No hay estantes creados. Necesitas crear estantes.", alert=True)
+            Messagebox.show_info(title="Error", message="No hay estantes creados. Necesitas crear estantes.", alert=True, parent=self)
         else:
             self.limpiar_pantalla(self.lblFramePrincipal)
             pantalla_biblioteca = VerBiblioteca(self.user_id, self.lblFramePrincipal)
@@ -366,10 +334,10 @@ class App(Window):
         estado = False
         #user = self.database_manager.selectUserById(self.user_id)
         if self.do_hash(self.passw_entry.get()) == self.user.password: # porque guardo la contraseña hasheada
-            Messagebox.show_info(title="Éxito", message=f"Contraseña correcta. Puedes entrar a {tipo}.")
+            Messagebox.show_info(title="Éxito", message=f"Contraseña correcta. Puedes entrar a {tipo}.", parent=self.popup)
             estado = True
         else: 
-            Messagebox.show_error(title="Error", message="Contraseña incorrecta. Inténtalo de nuevo", alert=True)
+            Messagebox.show_error(title="Error", message="Contraseña incorrecta. Inténtalo de nuevo", alert=True, parent=self.popup)
         self.popup.destroy()
         if estado and tipo == "crear estantes":
             self.nuevo_estante()

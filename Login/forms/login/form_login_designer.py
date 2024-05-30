@@ -13,7 +13,10 @@ class FormLoginDesigner:
     
     def register_user(self): #registrar usuario
         pass
-
+    
+    def recuperar_passw(self): #recuperar contraseña
+        pass
+    
     def __init__(self):
         self.ventana = tk.Tk()
         self.ventana.title("Inicio de sesión")
@@ -57,13 +60,17 @@ class FormLoginDesigner:
         self.passw.pack(fill = tk.X, padx = 20, pady = 10)
         self.passw.config(show = "*") #para mostrar * en lugar de lo que escribimos
 
-        #boton inicio de sesion #3a7ff6
+        #botón inicio de sesion #3a7ff6
         inicio = tk.Button(frame_form_fill, text = "Iniciar sesión", font = ("Times", 15, BOLD), background = "#df5553", bd = 0, foreground = "#fff", command = self.check_session) #command = self.check_session la función que se ejecutará
         inicio.pack(fill = tk.X, padx = 20, pady = 20)
         #inicio.bind("<Return>", (lambda event: self.check_session())) usamos bind para lanzar un evento, en este caso usando una función lambda
 
-        #boton registro usuario #fcfcfc #3a7ff6
+        #botón registro usuario #fcfcfc #3a7ff6
         registro = tk.Button(frame_form_fill, text = "Registrar usuario", font = ("Times", 15, BOLD), background = "#fcfcfc", bd = 0, foreground = "#df5553", command = self.register_user) 
         registro.pack(fill = tk.X, padx = 20, pady = 20)
-
+        
+        #botón recuperar contraseña
+        registro = tk.Button(frame_form_fill, text = "Recuperar contraseña", font = ("Times", 15, BOLD), background = "#df5553", bd = 0, foreground = "#fcfcfc", command = self.recuperar_passw) 
+        registro.pack(fill = tk.X, padx = 20, pady = 5)
+        
         self.ventana.mainloop()

@@ -131,14 +131,18 @@ class AddEstantes(Frame):
 
     def fill_estantes_add(self):
         nombres_estantes = []
+        docu = self.database_manager.selectDocumentById(self.doc_id_editar) # obtengo el documento
         estantes = self.database_manager.selectAllEstantesByIdOwner(self.user_id) # obtengo todos los estantes creados para el usuario
+        # estantes_documento = self.database_manager.selectEstantesLibro(self.doc_id_editar)
+        nombres_estantes_documento = self.database_manager.selectNombreEstantesLibro(self.doc_id_editar) # obtengo los estantes en los que ya está el documento
         for estante in estantes:
-            nombres_estantes.append(estante.nombre)
+            if estante.nombre not in nombres_estantes_documento and (estante.tipo == docu.tipo.upper() or estante.tipo == "LIBROS/OTROS"):
+                nombres_estantes.append(estante.nombre)
         self.combo_estantes_add['values'] = nombres_estantes
 
     def fill_estantes_delete(self):
         nombres_estantes = []
-        estantes = self.database_manager.selectEstantesLibro(self.doc_id_editar) # obtengo los estantes en los que está el libro
+        estantes = self.database_manager.selectEstantesLibro(self.doc_id_editar) # obtengo los estantes en los que está el documento
         for estante in estantes:
             nombres_estantes.append(estante.nombre)
         self.combo_estantes_delete['values'] = nombres_estantes
@@ -160,7 +164,15 @@ class AddEstantes(Frame):
         self.fill_estantes_delete()
         self.btnadd_doc.configure(state="normal")
         self.btneliminar_doc.configure(state="normal")
-
+        self.btndescartar_doc.configure(state="normal")
+      
+    def descartar(self):
+        self.limpiar_documentos()
+        self.btndescartar_doc.configure(state="disabled")
+        self.btnseleccionar_doc.configure(state="disabled")
+        self.btneliminar_doc.configure(state="disabled")
+        self.btnadd_doc.configure(state="disabled")
+          
     def limpiar_estantes(self):
         self.e_nombre.delete(0, END)
         self.e_tematica.delete(0, END)
@@ -258,11 +270,15 @@ class AddEstantes(Frame):
         self.e_tipo_doc = self.entry_label(lblframe3, 5, 120, "Tipo")
 
         self.btnseleccionar_doc = Button(lblframe3, text="Seleccionar", command=self.seleccionar, bootstyle=SUCCESS)
-        self.btnseleccionar_doc.configure(state= "disable")
+        self.btnseleccionar_doc.configure(state= "disabled")
         self.btnseleccionar_doc.place(x=5, y=200, width=100)
 
+        self.btndescartar_doc = Button(lblframe3, text="Descartar", command=self.descartar, bootstyle=DANGER)
+        self.btndescartar_doc.configure(state= "disabled")
+        self.btndescartar_doc.place(x=125, y=200, width=100)
+        
         self.btnadd_doc = Button(lblframe3, text="Añadir", command=self.add_doc_estante, bootstyle=SUCCESS)
-        self.btnadd_doc.configure(state= "disable")
+        self.btnadd_doc.configure(state= "disabled")
         self.btnadd_doc.place(x=5, y=260, width=100)
         """# rellenamos el combobox con los estantes
         opciones_estantes = []
@@ -272,7 +288,7 @@ class AddEstantes(Frame):
         self.combo_estantes_add.place(x=125, y=260)
 
         self.btneliminar_doc = Button(lblframe3, text="Eliminar", command=self.delete_doc_estante, bootstyle=DANGER)
-        self.btneliminar_doc.configure(state= "disable")
+        self.btneliminar_doc.configure(state= "disabled")
         self.btneliminar_doc.place(x=5, y=320, width=100)
         self.combo_estantes_delete = Combobox(lblframe3, values=[])
         self.combo_estantes_delete.place(x=125, y=320)

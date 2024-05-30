@@ -65,41 +65,35 @@ class VisorPDF(Frame):
 
     def guardar(self):
         pass
-
+    
+    # ELEGIR EL DOCUMENTO A VISUALIZAR
     def seleccionar(self):
-        pass
+        self.limpiar()
+        self.btnselfile.configure(state="normal")
+        self.btndescartar.configure(state="normal")
+        dato = self.tableview.view.item(self.tableview.view.selection())["values"]
+        doc_id = int(dato[0]) # id del documento 
+        documento = self.database_manager.selectDocumentById(doc_id) # obtengo el documento con ese id
+        self.e_titulo.insert(0, documento.titulo)
+        self.e_autor.insert(0, documento.autor)
+        self.e_idioma.insert(0, documento.idioma)
 
     def limpiar(self):
-        self.label_img.config(image=None)
         self.e_titulo.delete(0, END)
         self.e_autor.delete(0, END)
         self.e_idioma.delete(0, END)
-        self.e_fecha.delete(0, END)
-        self.e_isbn.delete(0, END)
-        self.e_editorial.delete(0, END)
-        self.e_tematica.delete(0, END)
-        self.e_emisor.delete(0, END)
-        self.e_tipo.delete(0, END)
-        self.e_subtipo.delete(0, END)
 
-    def editar(self):
-        pass
+    def descartar(self):
+        self.limpiar()
+        self.btnselfile.config(state="disabled")
+        self.btnviewfile.config(state="disabled")
+        self.btndescartar.configure(state="disabled")
 
     def eliminar(self):
         pass
 
     def on_frame_configure(self, event):
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
-
-    def fetch_book_cover(self, isbn):
-        url = f"https://covers.openlibrary.org/b/isbn/{isbn}-M.jpg"
-        response = requests.get(url)
-
-        if response.status_code == 200: 
-            image_data = response.content
-            return Image.open(BytesIO(image_data))
-        else:
-            raise Exception("No se pudo recuperar la imagen de la portada")
 
     def move_data(self, doc:Documento):
         self.limpiar()
@@ -126,8 +120,7 @@ class VisorPDF(Frame):
 
     def eventos(self, event):
         print(self.tableview.view.item(self.tableview.view.selection())["values"])
-        #self.btneditar.configure(state="normal")
-        #self.btneliminar.configure(state="normal")
+        
 
     def open_file_dialog(self):
         self.file_path = filedialog.askopenfilename(title="Elige un archivo PDF", filetypes=[('PDF files', '*.pdf')])
@@ -138,9 +131,16 @@ class VisorPDF(Frame):
             self.btnviewfile.config(state="normal")
         
     def open_visor_file(self):
-        self.btn_nextpage.config(state="normal")
-        self.btn_prevpage.config(state="normal")
-        self.btn_salir.config(state="normal")
+        self.limpiar()
+        self.pages = ""
+        self.total_pages = 0
+        self.current_page = 0
+        self.btn_nextpage.configure(state="normal")
+        self.btn_prevpage.configure(state="normal")
+        self.btn_salir.configure(state="normal")
+        self.btnselecc.configure(state="disabled")
+        self.btnselfile.configure(state="disabled")
+        
         #pages = convert_from_path(self.file_path, first_page=1, last_page=2)
         self.pages = convert_from_path(self.file_path) # convierto mi archivo a páginas
         self.total_pages = len(self.pages)
@@ -178,6 +178,8 @@ class VisorPDF(Frame):
         self.btn_nextpage.config(state="disabled")
         self.btn_prevpage.config(state="disabled")
         self.btn_salir.config(state="disabled")
+        self.btnviewfile.config(state="disabled")
+        self.btnselecc.configure(state="normal")
         self.file_path = ""
         self.total_pages = 0
         self.current_page = 0
@@ -241,17 +243,23 @@ class VisorPDF(Frame):
         # ETIQUETAS Y SELECCIONAR PATH
         self.e_titulo = self.entry_label(self.lblframe1, 5, 400, "Título")
         self.e_autor = self.entry_label(self.lblframe1, 5, 440, "Autor")
+        self.e_idioma = self.entry_label(self.lblframe1, 5, 480, "Idioma")
+        
+        self.btnselecc = Button(self.lblframe1, text="Seleccionar", command=self.seleccionar, bootstyle=SUCCESS)
+        self.btnselecc.place(x=20, y=550, width=130)
+        
+        self.btnselfile = Button(self.lblframe1, text="Elegir archivo", command=self.open_file_dialog, bootstyle=PRIMARY)
+        self.btnselfile.configure(state="disabled")
+        self.btnselfile.place(x=165, y=550, width=130)
 
-        self.btnselfile = Button(self.lblframe1, text="Elegir archivo", command=self.open_file_dialog)
-        self.btnselfile.place(x=105, y=500, width=130)
-
+        self.btndescartar = Button(self.lblframe1, text="Descartar", command=self.descartar, bootstyle=DANGER)
+        self.btndescartar.configure(state="disabled")
+        self.btndescartar.place(x=20, y=600, width=130)
+        
         self.btnviewfile = tk.Button(self.lblframe1, text="\u2192", font=font_awesome, command=self.open_visor_file, bd=0, bg="#df5553", fg="white") #command=lambda d=doc: self.move_data(d)
-        self.btnviewfile.place(x=105, y=580, width=20, height=20)
         self.btnviewfile.config(state="disabled")
+        self.btnviewfile.place(x=165, y=600, width=20, height=20)
 
-        """self.e_titulo.insert(0, doc.titulo)
-        self.e_autor.insert(0, doc.autor)
-        self.e_idioma.insert(0, doc.idioma)"""
         
 
         

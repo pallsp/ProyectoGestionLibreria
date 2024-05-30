@@ -22,13 +22,15 @@ class Usuario(Base):
     nombre = Column(String(50), nullable=False, unique=True)
     password = Column(String(500), nullable=False)
     correo = Column(String(100), nullable=False)
+    localidad = Column(String(100), nullable=True)
+    nacimiento = Column(Date, nullable=True)
     foto = Column(String(250))
 
     #relación con la tabla cuenta 
-    cuenta = relationship("Cuenta", uselist=False, back_populates="usuario")
+    cuenta = relationship("Cuenta", uselist=False, back_populates="usuario", cascade="all, delete-orphan")
 
     #relación con la tabla biblioteca
-    biblioteca = relationship("Biblioteca", uselist=False, back_populates="propietario")
+    biblioteca = relationship("Biblioteca", uselist=False, back_populates="propietario", cascade="all, delete-orphan")
 
 class Cuenta(Base):
     __tablename__ = "cuenta"
@@ -40,21 +42,24 @@ class Cuenta(Base):
 
 class Biblioteca(Base):
     __tablename__ = "biblioteca"
-    id = Column(String(50), primary_key=True)
-    propietario_id = Column(Integer, ForeignKey("usuario.id"), primary_key=True)
+    id = Column(String(50), primary_key=True, unique=True)
+    propietario_id = Column(Integer, ForeignKey("usuario.id"), primary_key=True, unique=True)
     fecha_creacion = Column(Date)
 
     #relación con la tabla usuario
     propietario = relationship("Usuario", back_populates="biblioteca")
 
     #relación con la tabla estantes
-    estantes = relationship("Estante", back_populates="biblioteca")
+    estantes = relationship("Estante", back_populates="biblioteca", cascade="all, delete-orphan")
+    
+    #relación con la tabla documento
+    documentos = relationship("Documento", back_populates="biblioteca", cascade="all, delete-orphan")
 
 class Estante(Base):
     __tablename__ = "estante"
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True, unique=True)
     nombre = Column(String(100), nullable=False, unique=True)
-    propietario_id = Column(Integer, ForeignKey("biblioteca.propietario_id"), primary_key=True)
+    propietario_id = Column(Integer, ForeignKey("biblioteca.propietario_id"), primary_key=True, nullable=False)
     tematica = Column(String(50))
     tamano = Column(Integer, nullable=False)
     fecha_creacion = Column(Date)
@@ -67,12 +72,6 @@ class Estante(Base):
     #relación con la tabla documento
     documentos = relationship("Documento", secondary="documento_estante", back_populates="estantes")
 
-class DocumentoEstante(Base):
-    __tablename__ = "documento_estante"
-
-    documento_id = Column(Integer, ForeignKey('documento.id'), primary_key=True)
-    estante_id = Column(Integer, ForeignKey('estante.id'), primary_key=True)
-
 class Formato(Base):
     __tablename__ = "formato"
     id = Column(Integer, primary_key=True) # 1000 -> FÍSICO 1001 -> PDF EN UN FUTURO EPUB
@@ -83,14 +82,18 @@ class Formato(Base):
 
 class Documento(Base):
     __tablename__ = "documento"
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True, unique=True)
     estante = Column(Integer, ForeignKey("estante.id"), nullable=True)
-    propietario_id = Column(Integer, ForeignKey("usuario.id"), primary_key=True)
+    propietario_id = Column(Integer, ForeignKey("usuario.id"), primary_key=True, nullable=False)
+    biblioteca_id = Column(String(50), ForeignKey("biblioteca.id"), nullable=False)
     titulo = Column(String(100), nullable=False)
     autor = Column(String(100), nullable=False)
     formato_id = Column(Integer, ForeignKey("formato.id"), nullable=False)      #Column(Enum("FÍSICO", "PDF"))  # en un futuro EPUB  
     idioma = Column(String(20))
     tipo = Column(Enum("Libro", "Otro"), nullable=False) #tipo de documento
+    
+    #relación con la tabla biblioteca
+    biblioteca = relationship("Biblioteca", back_populates="documentos")
     
     #relación con la tabla formato
     formato = relationship("Formato", back_populates="documentos")
@@ -99,10 +102,16 @@ class Documento(Base):
     estantes = relationship("Estante", secondary="documento_estante", back_populates="documentos")
 
     #relación con la tabla libro
-    libro = relationship("Libro", uselist=False, back_populates="documento")
+    libro = relationship("Libro", uselist=False, back_populates="documento", cascade="all, delete-orphan")
 
     #relación con la tabla otro 
-    otro = relationship("Otro", uselist=False, back_populates="documento")
+    otro = relationship("Otro", uselist=False, back_populates="documento", cascade="all, delete-orphan")
+
+class DocumentoEstante(Base):
+    __tablename__ = "documento_estante"
+
+    documento_id = Column(Integer, ForeignKey('documento.id'), primary_key=True)
+    estante_id = Column(Integer, ForeignKey('estante.id'), primary_key=True)
 
 class Genero(Base):
     __tablename__ = "genero"
@@ -128,7 +137,7 @@ class Categoria(Base):
 class Libro(Base):
     __tablename__ = "libro"
     isbn = Column(String(100), primary_key=True) # se podría utilizar BigInteger
-    id_documento = Column(Integer, ForeignKey("documento.id"), primary_key=True, unique=True)
+    id_documento = Column(Integer, ForeignKey("documento.id"), primary_key=True)
     propietario_id = Column(Integer, ForeignKey("usuario.id"), primary_key=True)
     fecha_publicacion = Column(Date)
     editorial = Column(String(50), nullable=False)

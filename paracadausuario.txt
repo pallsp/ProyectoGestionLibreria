@@ -1,0 +1,9 @@
+entramos con mysql -u root -p
+
+CREATE USER 'usuario'@'localhost' IDENTIFIED BY 'contraseña';
+GRANT ALL PRIVILEGES ON *.* TO 'usuario'@'localhost' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+exit
+
+
+VER TODOS LOS USUARIOS -> SELECT User, Host FROM mysql.user;

@@ -1,0 +1,17 @@
+sudo apt-get install python3-tk
+pip install Pillow
+pip install cryptography 
+pip install SQLAlchemy
+pip install setuptools
+pip install mysql-connector-python
+sudo apt-get install pkg-config
+sudo apt-get update
+sudo apt-get install libmariadb-dev
+pip install mysqlclient
+pip install python-dotenv
+
+export PYTHONPATH=/home/pablo/PROYECTO/Login:$PYTHONPATH
+al .bashrc
+
+export PYTHONPATH="$PYTHONPATH:/home/pablo/PROYECTO/Login/proyectoLogin/lib/python3.11/site-packages"
+al .bashrc

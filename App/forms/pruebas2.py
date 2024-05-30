@@ -92,7 +92,7 @@ if __name__ == "__main__":
     root.mainloop()
 """
 
-import os
+"""import os
 import tkinter as tk
 from tkinter import Button, Label, messagebox, Toplevel
 from tkinter import ttk
@@ -194,4 +194,102 @@ if __name__ == "__main__":
     root.geometry("200x100")
     open_button = Button(root, text="Open Custom File Dialog", command=open_custom_dialog)
     open_button.pack(pady=20)
-    root.mainloop()
+    root.mainloop()"""
+    
+    
+"""import tkinter as tk
+from tkinter import font
+from ttkbootstrap import Style
+
+class MyApp(tk.Tk):
+    def __init__(self):
+        super().__init__()
+
+        self.title("Font Awesome Example")
+        self.geometry("1500x300")
+
+        # Asegúrate de que Font Awesome esté disponible
+        font_awesome = font.Font(family='FontAwesome', size=12)
+        
+        # Verifica si Font Awesome está en las fuentes disponibles
+        if 'FontAwesome' not in font.families():
+            print("FontAwesome no está disponible. Asegúrate de que la fuente esté instalada en tu sistema.")
+
+        # Crear un botón usando Font Awesome para el icono de barras de menú
+        self.btnocultar = tk.Button(self, text="\uf0c9", font=font_awesome, command=self.toggle_menu_lateral, bd=0, bg="#df5553", fg="white")
+        self.btnocultar.place(x=210, y=40)
+
+        # Crear botones adicionales para probar otros caracteres Unicode
+        self.btninfo = tk.Button(self, text="\u24D8", font=font_awesome, command=self.open_info, bd=0, bg="#df5553", fg="white")
+        self.btninfo.place(x=1420, y=5, width=30, height=30)
+
+        self.btnlicense = tk.Button(self, text=u"\U0001F12F", font=font_awesome, command=self.open_license, bd=0, bg="#df5553", fg="white")
+        self.btnlicense.place(x=1460, y=5, width=30, height=30)
+
+        # Otro botón para probar otro icono de Font Awesome
+        self.btnanother = tk.Button(self, text="\uf0a1", font=font_awesome, command=self.another_action, bd=0, bg="#df5553", fg="white")  # Icono de fa-bullhorn
+        self.btnanother.place(x=50, y=100)
+
+    def toggle_menu_lateral(self):
+        # Lógica para el menú lateral
+        print("Menú lateral ocultado/mostrado")
+
+    def open_info(self):
+        # Lógica para abrir información
+        print("Información abierta")
+
+    def open_license(self):
+        # Lógica para abrir licencia
+        print("Licencia abierta")
+
+    def another_action(self):
+        # Lógica para otra acción
+        print("Otra acción")
+
+if __name__ == "__main__":
+    app = MyApp()
+    app.mainloop()"""
+    
+# --------------------- CORREO ---------------------------
+"""import os 
+from dotenv import load_dotenv
+import smtplib
+from email.message import EmailMessage
+import ssl
+from datetime import datetime
+from tkinter import messagebox
+    
+try:
+    load_dotenv()
+    password = os.getenv("PASSWORD")
+    email_sender = "libreriocontacto@gmail.com"
+    email_receiver = "miguelo808@gmail.com"
+    subject = "Confirmación de registro"
+    body = "Bienvenido a la comunidad de Librerio, Pablo!!! Esperamos que puedas disfrutar de la aplicación"
+
+    em = EmailMessage()
+    em["From"] = email_sender
+    em["To"] = email_receiver
+    em["Subject"] = subject
+    em.set_content(body)
+    context = ssl.create_default_context()
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465, context = context) as smtp:
+        smtp.login(email_sender, password)
+        smtp.sendmail(email_sender, email_receiver, em.as_string())
+except smtplib.SMTPException as e:
+    print(f"Error inesperado al enviar el correo: {e}")
+    #messagebox.showerror(message = "Ha ocurrido un error inesperado, por favor ingrese el correo más tarde", title = "Error", parent=self.ventana)"""
+
+"""from random import *
+
+def generateCode():
+    letras = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+    numero = randint(0, 10000)
+    letra = choice(letras)
+    print(f"{letra}{numero}")"""
+    
+numeros = [0,1,2,3,4,5,6,7]
+    
+for n in numeros: 
+    print((n%3)+1)
+

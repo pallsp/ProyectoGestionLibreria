@@ -27,6 +27,7 @@ class AddLibro(Frame):
         self.widgets()
         self.mostrar()
 
+    # MÉTODOS WIDGETS
     def entry_label(self,frame,x,y,texto):
         lbl = Label(frame, text=texto,bootstyle=PRIMARY)
         lbl.place(x=x,y=y)
@@ -45,22 +46,33 @@ class AddLibro(Frame):
         combo.place(x=x+100,y=y)
         return combo
 
+    # VALIDAR CAMPOS
     def validar(self):
         patron_fecha = r'^\d{4}-\d{2}-\d{2}$'
+        if not(self.e_estante.get() is None or self.e_estante.get() == "Ninguno"):
+            est = self.database_manager.selectEstanteByName(self.e_estante.get())
+            if est.tipo == "OTRO":
+                Messagebox.show_error(title="Error", message="No se puede agregar el libro a este estante", alert=True)
+                return False
         if self.e_titulo.get() == "" or self.e_autor.get() == "" or self.e_formato.get() == "" or self.e_isbn.get() == "" or self.e_editorial.get() == "":
             Messagebox.show_error(title="Error", message="Faltan campos obligatorios", alert=True)
             return False
         elif len(self.e_titulo.get()) == 0:
             Messagebox.show_error(title="Error", message="El título es un campo obligatorio", alert=True)
             return False 
-        elif not self.e_isbn.get().isdigit():
-            Messagebox.show_error(title="Error", message="El ISBN tiene que ser un conjunto de dígitos", alert=True)
-            return False
         elif not re.match(patron_fecha, self.e_fecha.get()):
             Messagebox.show_error(title="Error", message="La fecha no está en el formato adecuado", alert=True)
             return False
+        else:
+            try:
+                # Intentar convertir la fecha en un objeto datetime
+                datetime.strptime(self.e_fecha.get(), '%Y-%m-%d')
+            except ValueError:
+                Messagebox.show_error(title="Error", message="La fecha no es válida", alert=True)
+                return False
         return True
 
+    # MOSTRAR 
     def mostrar(self):
         formato = ""
         dato = []
@@ -77,10 +89,13 @@ class AddLibro(Frame):
             #dato = [datosDocumentos[0],datosDocumentos[3],datosDocumentos[4],datosDocumentos[6],datosDocumentos[5],datosLibros[0],datosLibros[3],datosLibros[4]]
         self.tableview.build_table_data(self.coldata, dato)
 
+    # GUARDAR LIBRO
     def guardar(self):
         if self.validar(): #validar datos de los campos antes de guardar
             estante_d = ""
             id_d = ""
+            biblioteca = self.database_manager.selectBiblioteca(self.user_id)
+            # creo el documento
             documento = Documento()
             documento.titulo = self.e_titulo.get()
             documento.autor = self.e_autor.get()
@@ -91,19 +106,23 @@ class AddLibro(Frame):
             else:
                 documento.formato = self.database_manager.selectFormatoByTipo("PDF")
             # hay que guardar sí o sí un entero para estante pero cuidado porque no si no hay estantes no puede haber enteros
-            if self.e_estante.get() is None or self.e_estante.get() == "Ninguno":
+            if self.e_estante.get() == "" or self.e_estante.get() == "Ninguno": # si no se agrega a un estante
                 documento.estante = None
                 estante_d = None
-            else:
+            else: # si se agrega a un estante
                 est = self.database_manager.selectEstanteByName(self.e_estante.get())
                 documento.estante = est.id
                 estante_d = est.id
-                self.database_manager.updateEstanteSize(est.id, est.tamano+1)
+                self.database_manager.updateEstanteSize(est.id, est.tamano+1)     
             documento.tipo = "Libro" #siempre va a ser libro
             documento.propietario_id = self.user_id
+            documento.biblioteca_id = biblioteca.id
+            
             if self.is_new: # si no es una actualización
                 #añadimos el documento
-                self.database_manager.insertDocumento(documento)
+                self.database_manager.insertDocumento(documento) # inserto el documento en la base de datos
+            
+            # creo y guardo el libro en el documento
             libro = Libro()
             libro.isbn = self.e_isbn.get()
             libro.editorial = self.e_editorial.get()
@@ -111,38 +130,49 @@ class AddLibro(Frame):
             libro.tematica = self.e_tematica.get()
             libro.nombre_genero = self.e_genero.get()
             libro.nombre_categoria = self.e_categoria.get()
-            libro.id_documento = self.database_manager.selectIdLastDocumento()
             libro.propietario_id = self.user_id
-        #return Messagebox.show_error(title="Error",message="Ingresar un nombre válido para el producto", alert=True)
+            libro.id_documento = self.database_manager.selectIdLastDocumento()
             id_d = libro.id_documento
+            
             if self.is_new: # si no es una actualización
                 #añadimos el libro
                 self.database_manager.insertLibro(libro)
-                if not (self.e_estante.get() is None or self.e_estante.get() == "Ninguno"):
+                if not (self.e_estante.get() == "" or self.e_estante.get() == "Ninguno"):
                     self.database_manager.insertDocumentoEstante(id_d, estante_d)
                 Messagebox.show_info(title="Éxito", message="Datos guardados con éxito")
             else: # es una actualización
                 valor = Messagebox.show_question(title="Alerta", message="¿Estás seguro de que deseas actualizar el libro?", alert=True)
                 if valor == "Sí":
-                    estante = ""
+                    estante_d = ""
                     formato = ""
-                    if len(self.estantes) == 0 or self.e_estante.get() is None:
-                        estante = None
+                    if self.e_estante.get() == "Ninguno" or self.e_estante.get() == "":
+                        estante_d = None
                     else:
-                        estante = self.e_estante.get()
+                        est = self.database_manager.selectEstanteByName(self.e_estante.get())
+                        if est not in self.database_manager.selectEstantesLibro(self.doc_id_editar):
+                            self.database_manager.updateEstanteSize(est.id, est.tamano+1) 
+                        documento.estante = est.id
+                        estante_d = est.id
                     if self.e_formato.get() == "físico":
                         formato = 1000
                     else:
                         formato = 1001
-                    self.database_manager.updateDocumento(self.doc_id_editar, self.e_titulo.get(), self.e_autor.get(), self.e_idioma.get(), formato, estante)
+                    self.database_manager.updateDocumento(self.doc_id_editar, self.e_titulo.get(), self.e_autor.get(), self.e_idioma.get(), formato, estante_d)
                     self.database_manager.updateLibro(self.doc_id_editar, self.e_isbn.get(), self.e_fecha.get(), self.e_editorial.get(), self.e_tematica.get(), self.e_genero.get(), self.e_categoria.get())
                     self.is_new = True
                     Messagebox.show_info(title="Éxito", message="Datos actualizados con éxito")
-                self.btneditar.configure(state="disable")
-                self.btneliminar.configure(state="disable")
+                self.btneditar.configure(state="disabled")
+                self.btneliminar.configure(state="disabled")
             self.mostrar()
             self.limpiar()
 
+    #BOTÓN LIMPIAR 
+    def limpiar_descartar(self):
+        self.limpiar()
+        self.btneditar.config(state="disabled")
+        self.btneliminar.config(state="disabled")
+        
+    # LIMPIAR CAMPOS
     def limpiar(self):
         self.e_titulo.delete(0, END)
         self.e_autor.delete(0, END)
@@ -155,6 +185,7 @@ class AddLibro(Frame):
         self.e_genero.delete(0, END) # podría ser también .selection_clear()
         self.e_categoria.delete(0, END)
     
+    # EDITAR
     def editar(self):
         self.is_new = False
         self.limpiar()
@@ -176,17 +207,22 @@ class AddLibro(Frame):
         self.e_genero.current(0)
         self.e_categoria.current(0)
 
+    # ELIMINAR
     def eliminar(self):
         dato = self.tableview.view.item(self.tableview.view.selection())["values"]
         valor = Messagebox.show_question(title="Alertar", message="¿Estás seguro de que deseas eliminar este libro?", alert=True)
         if valor == "Sí": #se elimina
+            ests = self.database_manager.selectEstantesLibro(int(dato[0]))
+            self.database_manager.deleteDocumentoDeEstantes(int(dato[0]))
             self.database_manager.deleteLibroById(int(dato[0]))
             self.database_manager.deleteDocumentoById(int(dato[0]))
+            for est in ests: 
+                self.database_manager.updateEstanteSize(est.id, est.tamano-1) 
         Messagebox.show_info(title="Éxito", message="Libro eliminado con éxito")
         
         self.mostrar()
-        self.btneditar.configure(state="disable")
-        self.btneliminar.configure(state="disable")
+        self.btneditar.configure(state="disabled")
+        self.btneliminar.configure(state="disabled")
 
     def eventos(self, event):
         print(self.tableview.view.item(self.tableview.view.selection())["values"])
@@ -214,11 +250,9 @@ class AddLibro(Frame):
 
         # FORMULARIO LBLFRAME1
         #campos de documento
-        self.e_titulo = self.entry_label(lblframe1,5,0,"Título")
-        self.e_autor = self.entry_label(lblframe1,5,40,"Autor")
-        self.e_idioma = self.entry_label(lblframe1,5,80,"Idioma")
-        #opciones_formato = ["Físico", "PDF"]
-        #self.e_formato = self.comboboxea(lblframe1,5,120,"Formato",opciones_formato)
+        self.e_titulo = self.entry_label(lblframe1, 5, 0, "Título")
+        self.e_autor = self.entry_label(lblframe1, 5, 40, "Autor")
+        self.e_idioma = self.entry_label(lblframe1, 5, 80, "Idioma")
         self.e_formato = StringVar()
         lbl = Label(lblframe1, text="Formato", bootstyle=PRIMARY)
         lbl.place(x=5,y=120)
@@ -229,29 +263,33 @@ class AddLibro(Frame):
         # rellenamos el combobox de los estantes
         opciones_estantes=['Ninguno']
         for estante in self.estantes:
-            opciones_estantes.append(estante.nombre)
+            if estante.tipo != "OTRO":
+                opciones_estantes.append(estante.nombre)
         self.e_estante = self.comboboxea(lblframe1, 5, 160, "Estante", opciones_estantes)
 
         #campos de libro
-        self.e_isbn = self.entry_label(lblframe1,5,200,"ISBN")
-        self.e_editorial = self.entry_label(lblframe1,5,240,"Editorial")
-        self.e_fecha = self.entry_label(lblframe1,5,280,"Fecha")
-        self.e_tematica = self.entry_label(lblframe1,5,320,"Temática")
+        self.e_isbn = self.entry_label(lblframe1, 5, 200, "ISBN")
+        self.e_editorial = self.entry_label(lblframe1, 5, 240, "Editorial")
+        self.e_fecha = self.entry_label(lblframe1, 5, 280, "Fecha")
+        self.e_tematica = self.entry_label(lblframe1, 5, 320, "Temática")
         opciones_genero = self.database_manager.selectGeneros()
         self.e_genero = self.comboboxea(lblframe1, 5, 360, "Género", opciones_genero)
         opciones_categoria = self.database_manager.selectCategorias()
         self.e_categoria = self.comboboxea(lblframe1, 5, 400, "Categoría", opciones_categoria)
 
-        self.btnguardar = Button(lblframe1,text="Guardar", command=self.guardar)
-        self.btnguardar.place(x=10,y=450,width=135)
+        self.btnguardar = Button(lblframe1,text="Guardar", command=self.guardar, bootstyle=PRIMARY)
+        self.btnguardar.place(x=10, y=500, width=135)
 
         self.btneditar = Button(lblframe1,text="Editar", command=self.editar, bootstyle=SUCCESS)
-        self.btneditar.configure(state= "disable")
-        self.btneditar.place(x=10, y=490, width=135)
+        self.btneditar.configure(state= "disabled")
+        self.btneditar.place(x=10, y=540, width=135)
 
         self.btneliminar = Button(lblframe1, text="Eliminar", command=self.eliminar, bootstyle=DANGER)
-        self.btneliminar.configure(state= "disable")
-        self.btneliminar.place(x=10, y=530, width=135)
+        self.btneliminar.configure(state= "disabled")
+        self.btneliminar.place(x=165, y=540, width=135)
+        
+        self.btnlimpiar = Button(lblframe1, text="Limpiar", command=self.limpiar_descartar, bootstyle=SUCCESS)
+        self.btnlimpiar.place(x=165, y=500, width=135)
 
         # TABLA LBLFRAME2
         self.coldata = [
